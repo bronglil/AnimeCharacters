@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Rebuild ASCII designs for all characters in samples/characters.
+ * Rebuild ASCII designs (plain + colored HTML) for all characters.
  * Usage: node scripts/build-character-designs.js
  */
 import { readdirSync, mkdirSync, writeFileSync, copyFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { convertPath } from "../src/index.js";
+import { convertPathColored } from "../src/index.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const charDir = join(root, "samples", "characters");
@@ -17,9 +17,9 @@ const DESIGNS = [
   {
     id: "classic-clean",
     label: "Classic Clean",
-    blurb: "Sharp silhouette, classic glyphs",
+    blurb: "Sharp silhouette · color from image",
     opts: {
-      columns: 72,
+      columns: 64,
       style: "fill",
       ramp: "classic",
       quality: "high",
@@ -32,9 +32,9 @@ const DESIGNS = [
   {
     id: "classic-dense",
     label: "Classic Dense",
-    blurb: "Heavier ink, stronger edges",
+    blurb: "Heavier ink · stronger edges",
     opts: {
-      columns: 72,
+      columns: 64,
       style: "fill",
       ramp: "classic",
       quality: "high",
@@ -47,9 +47,9 @@ const DESIGNS = [
   {
     id: "standard-soft",
     label: "Standard Soft",
-    blurb: "image-to-ascii ramp, softer tones",
+    blurb: "Softer tones · color fill",
     opts: {
-      columns: 72,
+      columns: 64,
       style: "fill",
       ramp: "standard",
       quality: "high",
@@ -62,9 +62,9 @@ const DESIGNS = [
   {
     id: "dither-detail",
     label: "Dither Detail",
-    blurb: "Floyd–Steinberg for fine shading",
+    blurb: "Fine shading · colored glyphs",
     opts: {
-      columns: 80,
+      columns: 72,
       style: "fill",
       ramp: "classic",
       quality: "high",
@@ -91,15 +91,17 @@ for (const file of files) {
   const charEntry = { id, name, title, image: file, designs: {} };
   process.stdout.write(`Converting ${title}...\n`);
   for (const design of DESIGNS) {
-    const art = await convertPath(join(charDir, file), design.opts);
-    const outName = `${id}_${name}__${design.id}.txt`;
-    writeFileSync(join(outDir, outName), art + "\n", "utf8");
-    const lines = art.split("\n");
+    const rich = await convertPathColored(join(charDir, file), design.opts);
+    const base = `${id}_${name}__${design.id}`;
+    writeFileSync(join(outDir, `${base}.txt`), rich.text + "\n", "utf8");
+    writeFileSync(join(outDir, `${base}.html`), rich.html + "\n", "utf8");
+    const lines = rich.text.split("\n");
     charEntry.designs[design.id] = {
-      file: outName,
+      file: `${base}.txt`,
+      htmlFile: `${base}.html`,
       columns: lines[0]?.length ?? 0,
       rows: lines.length,
-      preview: lines.slice(0, 14).join("\n"),
+      preview: lines.slice(0, 10).join("\n"),
     };
   }
   catalog.characters.push(charEntry);
@@ -108,4 +110,4 @@ for (const file of files) {
 catalog.characters.sort((a, b) => a.id.localeCompare(b.id));
 writeFileSync(join(charDir, "catalog.json"), JSON.stringify(catalog, null, 2));
 copyFileSync(join(charDir, "catalog.json"), join(root, "gallery", "catalog.json"));
-console.log(`Done ${catalog.characters.length} chars × ${DESIGNS.length} designs`);
+console.log(`Done ${catalog.characters.length} chars × ${DESIGNS.length} designs (txt+html)`);

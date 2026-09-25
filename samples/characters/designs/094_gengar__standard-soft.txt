@@ -1,36 +1,32 @@
-                                                                        
-                :.                                                      
-               .0Gt,                                                    
-               .GCfLt:                                                  
-               .CCLtffL;                                                
-                fGCftttfL;.                ..,,                         
-                1GCCffftfCC;.:8i..;. ..,;ifG8@;                         
-                ;GCCCLLLLCCGGC880G8L1L@888008:                          
-     .:C1:.     ,0CCCCCCCCCCCCCCCCCCCGGGG00@i:;ii                       
-    1000GGGfi,  .8CCCCCLffttttttttttffLCCCCGG0@G:,,,,,,,:::::::::::.    
-     :0CCCLfffLi,GGGGGftttttttttffttttffLCCCCCGGCLfLfLLfffffLLLCC0L:    
-     1L0CCCCLfLCG@0CLftttttttttttttttttffLLCCCCCCCLfffffffLLCG08t,.     
-      .,GCCCCCLCCCCCLttfttttttttttttttfffLLLCCCCCCLLffLCCCGGGGi.        
-        .GGCCCCCCCCCLLLGtttttttttfftttfLLLCCCCCCCCCCCCCCCG0L:.          
-         .CGGCCCCCCCCC11CtttttttttfffLCCCCCCCCCCCCCCCCCG01..            
-          .GGCCCCCCC01;ifGffLLffffLCCCCCCCCCGCCCCCCGCGC;.               
-          .GCCCCCGCC0;;;1@GCCCCCCCCLLCCCGGLGCCCCCCC8t.                  
-          tCCCCCCGGGGC1i1tGCCCCCCCCLCGGCf11LCCCCCCC0ft11iii;;:,.        
-         .0LLCCCG,:GGGGGCLCGCCCCCCGCCLi;i110CCCCCCC0CGGGGGGGGCC@t.      
-         :0LLLCGG; ,LG0GGGGCCCCCC0Li;;;i1fGCCCCCCCCCCCCCCCGGGGG0Ct      
-         :0LLLCG0G.:i;ifC80GGGGGGGGG0GG00CCGGCCCCCCCCCCCCGGG8G8f.       
-         .8CLC0008Ct::::1;i1tLCG08800000Gf8GCCGGGGGGG0008L1:....        
-         ,@GCC08888@Li::1:::::::t;iiii1,:LGGGGG008@8Lt;:..              
-        :@@8G08@@@88@@0C1::::::1::,,,i:t80000088@L...                   
-       .88@@00@@@@@@@@@@@@0CfttLii1tf@@@@@@@@@@@G.                      
-       .@GG088@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@L.                       
-       .GGCGG88@@@@@@@@@@@@@@@@@@@@@@800008@@@t.                        
-        .G0GG88@@@@@@@@@@@@@@@@@@@8GGCCCCCG0@L.                         
-         .;f@@@@@@@@@@@@@@@@@@@@@8CCCCCCCCG08@.                         
-           .:@@@@@:,t0@@@@@@@@@@800CCGCCCGGG0@:                         
-             .,;;.   ..;G@@@@@@G00GGCCGGCCCCG0.                         
-                        .i0@@0...t0GG880@GGC0:                          
-                          .,i,   .tG@@@@@@@L,                           
-                                  .f@@@@@f:.                            
-                                   ..,:,..                              
-                                                                        
+                                                                
+              ::                                                
+              fCL;                                              
+              fGLfLi.                                           
+              1GCftfL1.                                         
+              iGCLfftfCt. ;i  .     ,;itL:                      
+              :0CCLLLLCGGtG@0t@t;tC@8888;                       
+      Li,     .8CCCCCCCCCCCCCCCGGGG000@1:;i,                    
+   ,C00GGCt;.  CCCCCLffttttttttffLLCCCCG0@f,:,::::;;;;;;;;;:    
+    ,CGCCLffLfiC0GGLttttttttttttttfLLCCCCGGCLfffffffffLCC0L;    
+    .;fGCCCLfCC8CCLtttttttttttttttffLLCCCCCCCLffffLLCCG8f,      
+       1GCCCCCCCCLftftttttttttttttffLLCCCCCCCLLLCGCGG01.        
+        10CCCCCCCCCCfLtttttttttfffLCCCCCCCCCCCCCCG0L;           
+         ;8GCCCCCCGi;tCffffffffLLCCCCCCCCCCCCCCC0t,             
+         ,GCCCCCCCL;;10CCCCCLCCCCCCCGGCGCCCCCGC;                
+         LCCCCCGGGGti1tGCCCCCCCLCGGLt1fGCCCCCCL1ii;;;:,,.       
+        .GLLCCG::GGG0CLCGCCCCCGCLt;;11GCCCCCCCGGGGGGGGCG@1      
+        :GLLCGGi ,LC0GGGGCCCCGC1ii1tLGCCCCCCCCCCCCGGGGG0Gt;     
+        :GLLCG08,i::;1GC00GGGGGGG00GCC0GCCCCGGGGGGGG8C1ti       
+        .8CLG0088L;::i;;;i1tLfLLLCLt1GCGGGGG80080fi:.           
+       .L@GG088888@Li1::::::1:::,i.iGGG0008@Li:.                
+       L@@8G8@@@@@@@@@Cftiiii::;iG8@@@@@@@@f                    
+       @G0888@@@@@@@@@@@@@@@@@@@@@@@@@@@@@f                     
+       CGGG08@@@@@@@@@@@@@@@@@@@@80008@@@i                      
+       .C8008@@@@@@@@@@@@@@@@@8GCCCCCG08f                       
+         ,1@@@@@C@@@@@@@@@@@@8GCCCCCCG00@.                      
+           ;00@f,.;f@@@@@@@@@00CGGCCCGG0@.                      
+              .      :0@@@@i;GGGCGCGGCCGf                       
+                       ;f0:   LG@@@@@@0t                        
+                              .G@@@@@L:                         
+                                :ii;.                           
+                                                                

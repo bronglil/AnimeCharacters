@@ -5,30 +5,42 @@ const designGrid = document.getElementById("design-grid");
 const preview = document.getElementById("preview");
 const selection = document.getElementById("selection");
 const copyBtn = document.getElementById("copy-btn");
+const copyHtmlBtn = document.getElementById("copy-html-btn");
 
 let catalog = null;
 let selectedChar = null;
 let selectedDesign = null;
 let currentArt = "";
+let currentHtml = "";
 
 function setSelection() {
   if (!selectedChar || !selectedDesign) {
     selection.innerHTML = `<span class="muted">Nothing selected</span>`;
     copyBtn.disabled = true;
+    copyHtmlBtn.disabled = true;
     return;
   }
   const design = catalog.designs.find((d) => d.id === selectedDesign);
-  selection.innerHTML = `<strong>${selectedChar.title}</strong><br/><span class="muted">${design.label}</span>`;
+  selection.innerHTML = `<strong>${selectedChar.title}</strong><br/><span class="muted">${design.label} · colored</span>`;
   copyBtn.disabled = !currentArt;
+  copyHtmlBtn.disabled = !currentHtml;
 }
 
 async function loadArt() {
   if (!selectedChar || !selectedDesign) return;
-  const file = selectedChar.designs[selectedDesign].file;
-  const url = new URL(`../samples/characters/designs/${file}`, import.meta.url);
-  const text = await fetch(url).then((r) => r.text());
+  const entry = selectedChar.designs[selectedDesign];
+  const txtUrl = new URL(`../samples/characters/designs/${entry.file}`, import.meta.url);
+  const htmlUrl = new URL(
+    `../samples/characters/designs/${entry.htmlFile || entry.file.replace(/\.txt$/, ".html")}`,
+    import.meta.url,
+  );
+  const [text, html] = await Promise.all([
+    fetch(txtUrl).then((r) => r.text()),
+    fetch(htmlUrl).then((r) => (r.ok ? r.text() : "")),
+  ]);
   currentArt = text.trimEnd();
-  preview.textContent = currentArt;
+  currentHtml = html.trim();
+  preview.innerHTML = currentHtml || `<pre>${currentArt.replace(/</g, "&lt;")}</pre>`;
   setSelection();
 }
 
@@ -39,9 +51,10 @@ function renderCharacters() {
     btn.type = "button";
     btn.className = "card" + (selectedChar?.id === ch.id ? " selected" : "");
     btn.innerHTML = `
+      <span class="badge">#${ch.id}</span>
       <img src="../samples/characters/${ch.image}" alt="${ch.title}" loading="lazy" />
       <p class="title">${ch.title}</p>
-      <p class="meta">#${ch.id}</p>
+      <p class="meta">Tap to preview designs</p>
     `;
     btn.addEventListener("click", async () => {
       selectedChar = ch;
@@ -54,19 +67,30 @@ function renderCharacters() {
   }
 }
 
-function renderDesigns() {
+async function renderDesigns() {
   designGrid.innerHTML = "";
   for (const design of catalog.designs) {
-    const previewText =
-      selectedChar?.designs?.[design.id]?.preview ||
-      catalog.characters[0]?.designs?.[design.id]?.preview ||
-      "";
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className =
       "card design-card" + (selectedDesign === design.id ? " selected" : "");
+
+    const htmlFile =
+      selectedChar?.designs?.[design.id]?.htmlFile ||
+      catalog.characters[0]?.designs?.[design.id]?.htmlFile;
+    let swatch = `<pre>${(selectedChar?.designs?.[design.id]?.preview || "").replace(/</g, "&lt;")}</pre>`;
+    if (htmlFile) {
+      try {
+        const url = new URL(`../samples/characters/designs/${htmlFile}`, import.meta.url);
+        const html = await fetch(url).then((r) => r.text());
+        swatch = html;
+      } catch {
+        /* keep plain preview */
+      }
+    }
+
     btn.innerHTML = `
-      <div class="swatch"><pre>${previewText.replace(/</g, "&lt;")}</pre></div>
+      <div class="swatch">${swatch}</div>
       <p class="title">${design.label}</p>
       <p class="meta">${design.blurb}</p>
     `;
@@ -74,7 +98,7 @@ function renderDesigns() {
       selectedDesign = design.id;
       if (!selectedChar) selectedChar = catalog.characters[0];
       renderCharacters();
-      renderDesigns();
+      await renderDesigns();
       await loadArt();
     });
     designGrid.appendChild(btn);
@@ -86,7 +110,16 @@ copyBtn.addEventListener("click", async () => {
   await navigator.clipboard.writeText(currentArt + "\n");
   copyBtn.textContent = "Copied";
   setTimeout(() => {
-    copyBtn.textContent = "Copy ASCII";
+    copyBtn.textContent = "Copy plain";
+  }, 1200);
+});
+
+copyHtmlBtn.addEventListener("click", async () => {
+  if (!currentHtml) return;
+  await navigator.clipboard.writeText(currentHtml + "\n");
+  copyHtmlBtn.textContent = "Copied";
+  setTimeout(() => {
+    copyHtmlBtn.textContent = "Copy HTML";
   }, 1200);
 });
 
@@ -94,5 +127,5 @@ catalog = await fetch(catalogUrl).then((r) => r.json());
 selectedChar = catalog.characters.find((c) => c.name === "pikachu") || catalog.characters[0];
 selectedDesign = catalog.designs[0].id;
 renderCharacters();
-renderDesigns();
+await renderDesigns();
 await loadArt();

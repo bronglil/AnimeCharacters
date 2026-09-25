@@ -6,6 +6,7 @@ import {
   srgbToLinear,
 } from "./luminance.js";
 import { DEFAULT_RAMP, getRamp } from "./ramps.js";
+import { toAnsi, toHtml, toPlain } from "./color_emit.js";
 
 /**
  * @typedef {Object} AsciiOptions
@@ -99,22 +100,27 @@ function prepareForSampling(image, columns, cellAspect, quality) {
   return { image: resized, cols, rows };
 }
 
-/** Area-average each ASCII cell from the (possibly downscaled) bitmap. */
-function sampleLumaGrid(image, cols, rows, metric) {
+/** Area-average luma (+ optional RGB) for each ASCII cell. */
+function sampleGrids(image, cols, rows, metric, withColor) {
   const srcW = image.bitmap.width;
   const srcH = image.bitmap.height;
   const { data } = image.bitmap;
-  const grid = [];
+  const lumaGrid = [];
+  const colorGrid = withColor ? [] : null;
 
   for (let cy = 0; cy < rows; cy++) {
     const y0 = Math.floor((cy * srcH) / rows);
     const y1 = Math.max(Math.floor(((cy + 1) * srcH) / rows), y0 + 1);
-    const row = [];
+    const lumaRow = [];
+    const colorRow = withColor ? [] : null;
     for (let cx = 0; cx < cols; cx++) {
       const x0 = Math.floor((cx * srcW) / cols);
       const x1 = Math.max(Math.floor(((cx + 1) * srcW) / cols), x0 + 1);
       let sumLin = 0;
       let sumAvg = 0;
+      let sumR = 0;
+      let sumG = 0;
+      let sumB = 0;
       let n = 0;
       for (let y = y0; y < y1; y++) {
         for (let x = x0; x < x1; x++) {
@@ -123,36 +129,58 @@ function sampleLumaGrid(image, cols, rows, metric) {
           const g = data[i + 1];
           const b = data[i + 2];
           const a = data[i + 3];
+          const alpha = a / 255;
+          const cr = r * alpha + 255 * (1 - alpha);
+          const cg = g * alpha + 255 * (1 - alpha);
+          const cb = b * alpha + 255 * (1 - alpha);
+          if (withColor) {
+            sumR += cr;
+            sumG += cg;
+            sumB += cb;
+          }
           if (metric === "average") {
-            sumAvg += pixelLuma(r, g, b, a, "average");
+            sumAvg += ((cr + cg + cb) * alpha) / (255 * 3);
           } else {
-            const alpha = a / 255;
-            const bg = 128;
-            const cr = (r * alpha + bg * (1 - alpha)) / 255;
-            const cg = (g * alpha + bg * (1 - alpha)) / 255;
-            const cb = (b * alpha + bg * (1 - alpha)) / 255;
             sumLin +=
-              0.2126 * srgbToLinear(cr) +
-              0.7152 * srgbToLinear(cg) +
-              0.0722 * srgbToLinear(cb);
+              0.2126 * srgbToLinear(cr / 255) +
+              0.7152 * srgbToLinear(cg / 255) +
+              0.0722 * srgbToLinear(cb / 255);
           }
           n++;
         }
       }
-      if (!n) row.push(0.5);
-      else if (metric === "average") row.push(sumAvg / n);
-      else {
+      if (!n) {
+        lumaRow.push(0.5);
+        if (withColor) colorRow.push({ r: 128, g: 128, b: 128 });
+      } else if (metric === "average") {
+        lumaRow.push(sumAvg / n);
+        if (withColor) {
+          colorRow.push({
+            r: sumR / n,
+            g: sumG / n,
+            b: sumB / n,
+          });
+        }
+      } else {
         const y = sumLin / n;
         const f =
           y <= (6 / 29) ** 3
             ? (y * (29 / 6) ** 2) / 3 + 4 / 29
             : y ** (1 / 3);
-        row.push((116 * f - 16) / 100);
+        lumaRow.push((116 * f - 16) / 100);
+        if (withColor) {
+          colorRow.push({
+            r: sumR / n,
+            g: sumG / n,
+            b: sumB / n,
+          });
+        }
       }
     }
-    grid.push(row);
+    lumaGrid.push(lumaRow);
+    if (withColor) colorGrid.push(colorRow);
   }
-  return grid;
+  return { lumaGrid, colorGrid };
 }
 
 function edgeGridFromLuma(grid) {
@@ -464,18 +492,24 @@ function flattenBackground(image, mode) {
 }
 
 /**
- * Convert a Jimp image instance to ASCII art.
- * @param {import("jimp").Jimp} image
- * @param {AsciiOptions} [options]
+ * Shared conversion pipeline.
+ * @returns {{ text: string, html: string, ansi: string, cells: import('./color_emit.js').AsciiCell[][] }}
  */
-export function convertImage(image, options = {}) {
+function convertImageCore(image, options = {}) {
   const opts = normalizeOptions(options);
   const ramp = getRamp(opts.ramp);
   if (ramp.length < 2) throw new Error("Ramp needs at least 2 characters");
 
   const flatImg = flattenBackground(image, opts.background);
   const prepared = prepareForSampling(flatImg, opts.columns, opts.cellAspect, opts.quality);
-  let grid = sampleLumaGrid(prepared.image, prepared.cols, prepared.rows, opts.metric);
+  const { lumaGrid, colorGrid } = sampleGrids(
+    prepared.image,
+    prepared.cols,
+    prepared.rows,
+    opts.metric,
+    true,
+  );
+  let grid = lumaGrid;
 
   const useRelief =
     opts.style === "relief" || (opts.style === "auto" && isNearlyBinary(grid));
@@ -499,9 +533,42 @@ export function convertImage(image, options = {}) {
   for (let y = 0; y < h; y++) rebuilt.push(adjusted.slice(y * w, (y + 1) * w));
   if (opts.dither) rebuilt = floydSteinberg(rebuilt, ramp.length);
 
-  return rebuilt
-    .map((row) => row.map((luma) => lumaToChar(luma, ramp, opts.invert)).join(""))
-    .join("\n");
+  const cells = rebuilt.map((row, y) =>
+    row.map((luma, x) => {
+      const char = lumaToChar(luma, ramp, opts.invert);
+      const rgb = colorGrid[y][x];
+      // Keep near-white background glyphs dim so color pop is on the subject
+      if (char === " " || (rgb.r > 246 && rgb.g > 246 && rgb.b > 246)) {
+        return { char: " ", r: 20, g: 22, b: 28 };
+      }
+      return { char, r: rgb.r, g: rgb.g, b: rgb.b };
+    }),
+  );
+
+  return {
+    text: toPlain(cells),
+    html: toHtml(cells),
+    ansi: toAnsi(cells),
+    cells,
+  };
+}
+
+/**
+ * Convert a Jimp image instance to plain ASCII art (string).
+ * @param {import("jimp").Jimp} image
+ * @param {AsciiOptions} [options]
+ */
+export function convertImage(image, options = {}) {
+  return convertImageCore(image, options).text;
+}
+
+/**
+ * Convert with color: plain text, HTML, and ANSI truecolor.
+ * @param {import("jimp").Jimp} image
+ * @param {AsciiOptions} [options]
+ */
+export function convertImageColored(image, options = {}) {
+  return convertImageCore(image, options);
 }
 
 export async function convertPath(path, options = {}) {
@@ -509,7 +576,17 @@ export async function convertPath(path, options = {}) {
   return convertImage(image, options);
 }
 
+export async function convertPathColored(path, options = {}) {
+  const image = await Jimp.read(path);
+  return convertImageColored(image, options);
+}
+
 export async function convertBuffer(buffer, options = {}) {
   const image = await Jimp.read(buffer);
   return convertImage(image, options);
+}
+
+export async function convertBufferColored(buffer, options = {}) {
+  const image = await Jimp.read(buffer);
+  return convertImageColored(image, options);
 }

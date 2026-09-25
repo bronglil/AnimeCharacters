@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { convertPath, RAMPS } from "../src/index.js";
+import { convertPath, convertPathColored, RAMPS } from "../src/index.js";
 
 function printHelp() {
   console.log(`Usage: anime-ascii <image> [options]
@@ -20,6 +20,7 @@ Options:
       --style <mode>      auto | fill | relief | portrait
       --metric <name>     lstar | average
       --quality <mode>    fast (default) | high
+      --color             Print ANSI truecolor ASCII
       --dither            Floyd-Steinberg dither
       --list-ramps        Print built-in ramps
   -h, --help              Show help
@@ -43,6 +44,7 @@ function parseArgs(argv) {
     style: "auto",
     metric: "lstar",
     quality: "fast",
+    color: false,
     listRamps: false,
     help: false,
   };
@@ -100,6 +102,9 @@ function parseArgs(argv) {
       case "--quality":
         args.quality = next();
         break;
+      case "--color":
+        args.color = true;
+        break;
       case "--dither":
         args.dither = true;
         break;
@@ -130,7 +135,7 @@ async function main() {
     return 1;
   }
 
-  const art = await convertPath(resolve(args.image), {
+  const opts = {
     columns: args.columns,
     cellAspect: args.cellAspect,
     ramp: args.ramp,
@@ -144,12 +149,21 @@ async function main() {
     style: args.style,
     metric: args.metric,
     quality: args.quality,
-  });
+  };
 
-  if (args.output) {
-    writeFileSync(args.output, art + "\n", "utf8");
+  if (args.color) {
+    const rich = await convertPathColored(resolve(args.image), opts);
+    if (args.output) {
+      const out = String(args.output);
+      if (out.endsWith(".html")) writeFileSync(out, rich.html + "\n", "utf8");
+      else writeFileSync(out, rich.ansi + "\n", "utf8");
+    } else {
+      console.log(rich.ansi);
+    }
   } else {
-    console.log(art);
+    const art = await convertPath(resolve(args.image), opts);
+    if (args.output) writeFileSync(args.output, art + "\n", "utf8");
+    else console.log(art);
   }
   return 0;
 }
