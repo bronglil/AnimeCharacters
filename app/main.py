@@ -91,8 +91,7 @@ def build():
     ascii_opts = AsciiOptions(
         columns=int(request.form.get("columns") or 72),
         invert=request.form.get("invert") == "on",
-        edge_boost=0.2,
-        contrast=1.15,
+        style=request.form.get("style") or "auto",
         ramp=request.form.get("ramp") or "classic",
     )
     ascii_art = convert_path(save_path, ascii_opts)

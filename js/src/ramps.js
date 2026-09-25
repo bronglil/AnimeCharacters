@@ -1,6 +1,8 @@
 /** Character ramps ordered light → dark (ink density). */
 
 export const RAMPS = {
+  // Same default palette as npm `image-to-ascii` / asciify-pixel
+  standard: " .,:;i1tfLCG08@",
   classic: " .:-=+*#%@",
   soft: " .,:;ox%#@",
   compact: " .:oO@",
@@ -10,7 +12,7 @@ export const RAMPS = {
     " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
 };
 
-export const DEFAULT_RAMP = "classic";
+export const DEFAULT_RAMP = "standard";
 
 /** @param {string} nameOrChars */
 export function getRamp(nameOrChars) {

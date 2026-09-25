@@ -1,6 +1,6 @@
 {
   "name": "anime-ascii",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Accurate image-to-ASCII art for anime-style character silhouettes and portraits",
   "type": "module",
   "main": "./src/index.js",

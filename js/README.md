@@ -4,7 +4,14 @@ Convert images into accurate ASCII character designs (bust / silhouette style).
 
 Same approach as the Python package: linear-light luminance, L*-style mapping, monospace cell aspect, classic ` .:-=+*#%@` ramp.
 
-## Install
+## Features
+
+- Accurate box-filter sampling (area average in linear light / L*)
+- Default ramp matches `image-to-ascii`: ` .,:;i1tfLCG08@`
+- `style: "relief"` for hollow-face / dense-shoulder bust silhouettes
+- Local contrast for photo detail (better than flat fill)
+- CLI + library API
+
 
 ```bash
 cd js
@@ -23,10 +30,10 @@ npm install anime-ascii
 ```js
 import { convertPath, convertImage, AsciiOptions } from "anime-ascii";
 
-const art = await convertPath("portrait.png", {
+const art = await convertPath(path, {
   columns: 80,
-  invert: false,
-  edgeBoost: 0.2,
+  style: "relief", // hollow face + dense shoulders for silhouettes
+  ramp: "classic",
 });
 console.log(art);
 ```
@@ -35,10 +42,12 @@ console.log(art);
 
 ```bash
 npx anime-ascii portrait.png -w 80 -o out.txt
-npx anime-ascii portrait.png --invert --edge-boost 0.25
+npx anime-ascii bust.png --style relief -r classic -w 64
+npx anime-ascii photo.png --style fill --metric lstar
 npx anime-ascii --list-ramps
 ```
 
+`style: "auto"` (default) uses **relief** for near-binary silhouettes and **fill** + local contrast for photos — more accurate than flat `image-to-ascii` fill.
 ## Tests
 
 ```bash

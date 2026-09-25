@@ -1,13 +1,10 @@
-"""Character ramps ordered light → dark (ink density).
-
-The classic ramp matches the common silhouette bust aesthetic:
-``. : - = + * # % @``
-"""
+"""Character ramps ordered light → dark (ink density)."""
 
 from __future__ import annotations
 
 RAMPS: dict[str, str] = {
-    # Light → dark
+    # Same default palette as npm image-to-ascii / asciify-pixel
+    "standard": " .,:;i1tfLCG08@",
     "classic": " .:-=+*#%@",
     "soft": " .,:;ox%#@",
     "compact": " .:oO@",
@@ -16,11 +13,10 @@ RAMPS: dict[str, str] = {
     "dense": " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
 }
 
-DEFAULT_RAMP = "classic"
+DEFAULT_RAMP = "standard"
 
 
 def get_ramp(name_or_chars: str) -> str:
-    """Return a built-in ramp by name, or treat the string as a custom ramp."""
     key = name_or_chars.strip().lower()
     if key in RAMPS:
         return RAMPS[key]
@@ -30,6 +26,5 @@ def get_ramp(name_or_chars: str) -> str:
 
 
 def ramp_density_scores(ramp: str) -> list[float]:
-    """Normalized 0..1 density index for each character in the ramp."""
     n = max(len(ramp) - 1, 1)
     return [i / n for i in range(len(ramp))]

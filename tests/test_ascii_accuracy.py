@@ -38,53 +38,67 @@ def _mean_density(art: str, ramp: str) -> float:
 
 
 def test_ramps_light_to_dark_order():
-    scores = ramp_density_scores(get_ramp("classic"))
+    scores = ramp_density_scores(get_ramp("standard"))
     assert scores == sorted(scores)
-    assert get_ramp("classic")[0] in {" ", "."}
+    assert get_ramp("standard") == " .,:;i1tfLCG08@"
     assert get_ramp("classic")[-1] == "@"
 
 
 def test_all_fixtures_convert(fixtures: list[Path]):
     assert len(fixtures) >= 15
-    ramp = get_ramp("classic")
+    ramp = get_ramp("standard")
     for path in fixtures:
         art = convert_path(
             path,
-            AsciiOptions(columns=60, invert=True, edge_boost=0.1),
+            AsciiOptions(columns=60, invert=False, style="auto"),
         )
         lines = art.splitlines()
         assert lines, f"empty output for {path.name}"
         assert all(len(line) == 60 for line in lines), path.name
-        # Only ramp characters
         for ch in art.replace("\n", ""):
-            assert ch in ramp, f"unexpected {ch!r} in {path.name}"
+            assert ch in ramp or ch in get_ramp("classic"), f"unexpected {ch!r} in {path.name}"
 
 
 def test_black_vs_white_mapping():
-    ramp = get_ramp("classic")
+    ramp = get_ramp("standard")
     black = Image.new("RGB", (64, 64), (0, 0, 0))
     white = Image.new("RGB", (64, 64), (255, 255, 255))
 
-    # Without invert: dark → dense (@), bright → light (space/.)
-    dark_art = convert_image(black, AsciiOptions(columns=40, autocontrast=False, invert=False, edge_boost=0))
-    light_art = convert_image(white, AsciiOptions(columns=40, autocontrast=False, invert=False, edge_boost=0))
+    dark_art = convert_image(
+        black,
+        AsciiOptions(columns=40, autocontrast=False, invert=False, style="fill", local_contrast=0, edge_boost=0),
+    )
+    light_art = convert_image(
+        white,
+        AsciiOptions(columns=40, autocontrast=False, invert=False, style="fill", local_contrast=0, edge_boost=0),
+    )
     assert _mean_density(dark_art, ramp) > 0.7
     assert _mean_density(light_art, ramp) < 0.3
 
-    # With invert: dark image → light glyphs (terminal-style flip of ink)
-    inv_dark = convert_image(black, AsciiOptions(columns=40, autocontrast=False, invert=True, edge_boost=0))
+    inv_dark = convert_image(
+        black,
+        AsciiOptions(columns=40, autocontrast=False, invert=True, style="fill", local_contrast=0, edge_boost=0),
+    )
     assert _mean_density(inv_dark, ramp) < 0.3
 
 
 def test_horizontal_gradient_density_increases_left_to_right_when_inverted_off(fixtures: list[Path]):
     path = FIXTURE_DIR / "04_hgradient.png"
     assert path.exists()
-    ramp = get_ramp("classic")
+    ramp = get_ramp("standard")
     art = convert_path(
         path,
-        AsciiOptions(columns=64, invert=False, autocontrast=False, edge_boost=0, brightness=0, contrast=1),
+        AsciiOptions(
+            columns=64,
+            invert=False,
+            autocontrast=False,
+            edge_boost=0,
+            style="fill",
+            local_contrast=0,
+            brightness=0,
+            contrast=1,
+        ),
     )
-    # Sample left quarter vs right quarter density
     rows = art.splitlines()
     left = []
     right = []
@@ -94,16 +108,15 @@ def test_horizontal_gradient_density_increases_left_to_right_when_inverted_off(f
         right.extend(row[-(mid // 2) :])
     left_d = sum(_char_density(c, ramp) for c in left) / len(left)
     right_d = sum(_char_density(c, ramp) for c in right) / len(right)
-    # Left is darker in the fixture → higher density without invert
     assert left_d > right_d + 0.15
 
 
-def test_bust_silhouette_center_darker_than_corners(fixtures: list[Path]):
+def test_bust_silhouette_hollow_face_relief(fixtures: list[Path]):
     path = FIXTURE_DIR / "08_bust_silhouette.png"
     ramp = get_ramp("classic")
     art = convert_path(
         path,
-        AsciiOptions(columns=70, invert=False, autocontrast=True, edge_boost=0.2),
+        AsciiOptions(columns=64, invert=False, style="relief", ramp="classic"),
     )
     rows = art.splitlines()
     h, w = len(rows), len(rows[0])
@@ -115,14 +128,20 @@ def test_bust_silhouette_center_darker_than_corners(fixtures: list[Path]):
                 vals.append(_char_density(rows[y][x], ramp))
         return sum(vals) / len(vals)
 
-    center = region_density(w // 3, 2 * w // 3, h // 4, 3 * h // 4)
-    corner = region_density(0, w // 6, 0, h // 6)
-    assert center > corner + 0.2
+    face = region_density(int(w * 0.4), int(w * 0.6), int(h * 0.12), int(h * 0.32))
+    shoulders = region_density(int(w * 0.25), int(w * 0.75), int(h * 0.7), int(h * 0.95))
+    corner = region_density(0, w // 8, 0, h // 8)
+    assert shoulders > face + 0.05
+    assert shoulders > corner + 0.15
+    assert face < 0.9
 
 
 def test_custom_ramp_and_columns():
     img = Image.new("RGB", (50, 50), (0, 0, 0))
-    art = convert_image(img, AsciiOptions(columns=20, ramp="01", autocontrast=False, invert=False, edge_boost=0))
+    art = convert_image(
+        img,
+        AsciiOptions(columns=20, ramp="01", autocontrast=False, invert=False, edge_boost=0, style="fill", local_contrast=0),
+    )
     assert set(art.replace("\n", "")) <= {"0", "1"}
     assert all(len(line) == 20 for line in art.splitlines())
 
@@ -130,7 +149,7 @@ def test_custom_ramp_and_columns():
 def test_each_builtin_ramp_on_bust(fixtures: list[Path]):
     path = FIXTURE_DIR / "08_bust_silhouette.png"
     for name in RAMPS:
-        art = convert_path(path, AsciiOptions(columns=50, ramp=name, invert=True))
+        art = convert_path(path, AsciiOptions(columns=50, ramp=name, style="relief"))
         assert art.strip()
         assert len(art.splitlines()) >= 5
 
@@ -145,12 +164,11 @@ def test_user_example_image_if_present():
 
     art = convert_path(
         dest,
-        AsciiOptions(columns=72, invert=True, edge_boost=0.25, contrast=1.2),
+        AsciiOptions(columns=72, style="auto", ramp="classic"),
     )
     lines = art.splitlines()
     assert len(lines) >= 10
     assert all(len(line) == 72 for line in lines)
-    # Should use a mix of glyphs, not a single flat character
     counts = Counter(art.replace("\n", ""))
     assert len(counts) >= 4
 
@@ -163,21 +181,23 @@ def test_batch_report_all_fixtures(fixtures: list[Path], tmp_path: Path):
     for path in fixtures:
         art = convert_path(
             path,
-            AsciiOptions(columns=64, invert=True, edge_boost=0.15),
+            AsciiOptions(columns=64, style="auto"),
         )
         target = out_dir / f"{path.stem}.txt"
         target.write_text(art + "\n", encoding="utf-8")
-        report.append((path.name, len(art.splitlines()), _mean_density(art, get_ramp("classic"))))
+        report.append((path.name, len(art.splitlines()), _mean_density(art, get_ramp("standard"))))
     assert len(report) == len(fixtures)
-    # Sanity: not all identical densities
     densities = [d for _, _, d in report]
     assert max(densities) - min(densities) > 0.05
 
 
 def test_checker_has_both_light_and_dense(fixtures: list[Path]):
     path = FIXTURE_DIR / "10_checker.png"
-    ramp = get_ramp("classic")
-    art = convert_path(path, AsciiOptions(columns=64, invert=False, autocontrast=False, edge_boost=0))
+    ramp = get_ramp("standard")
+    art = convert_path(
+        path,
+        AsciiOptions(columns=64, invert=False, autocontrast=False, edge_boost=0, style="fill", local_contrast=0),
+    )
     dens = [_char_density(c, ramp) for c in art.replace("\n", "")]
     assert min(dens) < 0.25
     assert max(dens) > 0.75

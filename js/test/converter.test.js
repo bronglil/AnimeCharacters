@@ -22,10 +22,10 @@ function meanDensity(art, ramp) {
 }
 
 describe("ramps", () => {
-  it("orders classic light to dark", () => {
-    const ramp = getRamp("classic");
+  it("orders standard light to dark like image-to-ascii", () => {
+    const ramp = getRamp("standard");
+    assert.equal(ramp, " .,:;i1tfLCG08@");
     assert.equal(ramp.at(-1), "@");
-    assert.ok(ramp[0] === " " || ramp[0] === ".");
   });
 });
 
@@ -38,7 +38,7 @@ describe("luminance", () => {
 
 describe("convertImage", () => {
   it("maps black denser than white without invert", async () => {
-    const ramp = getRamp("classic");
+    const ramp = getRamp("standard");
     const black = new Jimp({ width: 64, height: 64, color: 0x000000ff });
     const white = new Jimp({ width: 64, height: 64, color: 0xffffffff });
     const darkArt = convertImage(black, {
@@ -46,12 +46,16 @@ describe("convertImage", () => {
       autocontrast: false,
       invert: false,
       edgeBoost: 0,
+      style: "fill",
+      localContrast: 0,
     });
     const lightArt = convertImage(white, {
       columns: 40,
       autocontrast: false,
       invert: false,
       edgeBoost: 0,
+      style: "fill",
+      localContrast: 0,
     });
     assert.ok(meanDensity(darkArt, ramp) > 0.7);
     assert.ok(meanDensity(lightArt, ramp) < 0.3);
@@ -65,10 +69,9 @@ describe("convertImage", () => {
     }
   });
 
-  it("renders a bust silhouette with dense center", async () => {
+  it("renders a bust silhouette with hollow face (relief)", async () => {
     const ramp = getRamp("classic");
     const img = new Jimp({ width: 320, height: 400, color: 0xfafafaff });
-    // head
     for (let y = 30; y < 150; y++) {
       for (let x = 110; x < 210; x++) {
         const dx = x - 160;
@@ -76,11 +79,9 @@ describe("convertImage", () => {
         if (dx * dx + dy * dy < 50 * 50) img.setPixelColor(0x141414ff, x, y);
       }
     }
-    // neck
     for (let y = 140; y < 210; y++) {
       for (let x = 140; x < 180; x++) img.setPixelColor(0x141414ff, x, y);
     }
-    // shoulders (filled trapezoid approx)
     for (let y = 210; y < 380; y++) {
       const t = (y - 210) / 170;
       const half = 40 + t * 100;
@@ -90,14 +91,15 @@ describe("convertImage", () => {
     }
 
     const art = convertImage(img, {
-      columns: 70,
+      columns: 64,
       invert: false,
-      autocontrast: true,
-      edgeBoost: 0.2,
+      style: "relief",
+      ramp: "classic",
     });
     const rows = art.split("\n");
     const h = rows.length;
     const w = rows[0].length;
+
     const dens = (x0, x1, y0, y1) => {
       let s = 0;
       let n = 0;
@@ -109,9 +111,14 @@ describe("convertImage", () => {
       }
       return s / n;
     };
-    const center = dens(Math.floor(w / 3), Math.floor((2 * w) / 3), Math.floor(h / 4), Math.floor((3 * h) / 4));
-    const corner = dens(0, Math.floor(w / 6), 0, Math.floor(h / 6));
-    assert.ok(center > corner + 0.2, `center=${center} corner=${corner}`);
+
+    const face = dens(Math.floor(w * 0.4), Math.floor(w * 0.6), Math.floor(h * 0.12), Math.floor(h * 0.32));
+    const shoulders = dens(Math.floor(w * 0.25), Math.floor(w * 0.75), Math.floor(h * 0.7), Math.floor(h * 0.95));
+    const corner = dens(0, Math.floor(w / 8), 0, Math.floor(h / 8));
+
+    assert.ok(shoulders > face + 0.05, `shoulders=${shoulders} face=${face}`);
+    assert.ok(shoulders > corner + 0.15, `shoulders=${shoulders} corner=${corner}`);
+    assert.ok(face < 0.9, `face too dense: ${face}`);
   });
 
   it("converts every built-in ramp", async () => {

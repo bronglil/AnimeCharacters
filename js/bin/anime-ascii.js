@@ -16,7 +16,9 @@ Options:
       --brightness <f>    Brightness offset
       --contrast <f>      Contrast multiplier
       --gamma <f>         Gamma
-      --edge-boost <f>    Edge emphasis 0..1
+      --edge-boost <f>    Edge emphasis 0..1 (fill style)
+      --style <mode>      auto | fill | relief (hollow bust look)
+      --metric <name>     lstar | average (average ≈ image-to-ascii)
       --dither            Floyd-Steinberg dither
       --list-ramps        Print built-in ramps
   -h, --help              Show help
@@ -35,8 +37,10 @@ function parseArgs(argv) {
     brightness: 0,
     contrast: 1,
     gamma: 1,
-    edgeBoost: 0.15,
+    edgeBoost: 0,
     dither: false,
+    style: "auto",
+    metric: "lstar",
     listRamps: false,
     help: false,
   };
@@ -85,6 +89,12 @@ function parseArgs(argv) {
       case "--edge-boost":
         args.edgeBoost = Number(next());
         break;
+      case "--style":
+        args.style = next();
+        break;
+      case "--metric":
+        args.metric = next();
+        break;
       case "--dither":
         args.dither = true;
         break;
@@ -126,6 +136,8 @@ async function main() {
     gamma: args.gamma,
     edgeBoost: args.edgeBoost,
     dither: args.dither,
+    style: args.style,
+    metric: args.metric,
   });
 
   if (args.output) {
