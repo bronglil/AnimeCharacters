@@ -1,0 +1,43 @@
+{
+  "name": "anime-ascii",
+  "version": "0.1.0",
+  "description": "Accurate image-to-ASCII art for anime-style character silhouettes and portraits",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "anime-ascii": "./bin/anime-ascii.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/**/*.test.js",
+    "convert": "node ./bin/anime-ascii.js"
+  },
+  "keywords": [
+    "ascii",
+    "ascii-art",
+    "image",
+    "anime",
+    "silhouette",
+    "cli"
+  ],
+  "author": "sajid",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "jimp": "^1.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bronglil/AnimeCharacters.git",
+    "directory": "js"
+  }
+}
