@@ -2,7 +2,6 @@ node_modules/
 js/node_modules/
 uploads/
 outputs/
-samples/
 .venv/
 venv/
 .pytest_cache/
@@ -10,3 +9,4 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
+tmp/

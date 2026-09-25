@@ -28,6 +28,11 @@ import { DEFAULT_RAMP, getRamp } from "./ramps.js";
  * @property {"fast"|"high"} [quality="fast"]
  */
 
+/**
+ * @property {"auto"|"white"|"none"} [background="auto"]
+ *   auto = flatten transparent / edge-connected near-black to white (sprites)
+ */
+
 /** @returns {Required<AsciiOptions>} */
 export function normalizeOptions(options = {}) {
   const style = options.style ?? "auto";
@@ -54,6 +59,7 @@ export function normalizeOptions(options = {}) {
     reliefBase: options.reliefBase ?? 0.8,
     localContrast: options.localContrast ?? portraitDefaults.localContrast ?? 0.45,
     quality: options.quality === "high" ? "high" : "fast",
+    background: options.background ?? "auto",
   };
 }
 
@@ -392,6 +398,71 @@ function lumaToChar(luma, ramp, invert) {
   return ramp[idx];
 }
 
+/** Flatten transparent pixels and edge-connected near-black onto white. */
+function flattenBackground(image, mode) {
+  if (mode === "none") return image;
+  const out = image.clone();
+  const { width: W, height: H, data } = out.bitmap;
+
+  // Always composite low-alpha onto white
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3] / 255;
+    if (a < 0.999) {
+      data[i] = Math.round(data[i] * a + 255 * (1 - a));
+      data[i + 1] = Math.round(data[i + 1] * a + 255 * (1 - a));
+      data[i + 2] = Math.round(data[i + 2] * a + 255 * (1 - a));
+      data[i + 3] = 255;
+    }
+  }
+
+  if (mode === "white" || mode === "auto") {
+    const nearBlack = (i) => data[i] < 22 && data[i + 1] < 22 && data[i + 2] < 22;
+    const cornerBlack =
+      nearBlack(0) &&
+      nearBlack(((W - 1) << 2)) &&
+      nearBlack(((H - 1) * W) << 2) &&
+      nearBlack((((H - 1) * W + (W - 1)) << 2));
+    const mid = (((H >> 1) * W + (W >> 1)) << 2);
+    const centerBlack = nearBlack(mid);
+    // Knock out a dark stage only when corners are black but the subject isn't.
+    const stage = mode === "white" || (cornerBlack && !centerBlack);
+
+    if (stage) {
+      const seen = new Uint8Array(W * H);
+      const q = [];
+      const enqueue = (x, y) => {
+        if (x < 0 || y < 0 || x >= W || y >= H) return;
+        const id = y * W + x;
+        if (seen[id]) return;
+        if (!nearBlack(id << 2)) return;
+        seen[id] = 1;
+        q.push(id);
+      };
+      for (let x = 0; x < W; x++) {
+        enqueue(x, 0);
+        enqueue(x, H - 1);
+      }
+      for (let y = 0; y < H; y++) {
+        enqueue(0, y);
+        enqueue(W - 1, y);
+      }
+      for (let qi = 0; qi < q.length; qi++) {
+        const id = q[qi];
+        const x = id % W;
+        const y = (id / W) | 0;
+        const i = id << 2;
+        data[i] = data[i + 1] = data[i + 2] = 255;
+        data[i + 3] = 255;
+        enqueue(x + 1, y);
+        enqueue(x - 1, y);
+        enqueue(x, y + 1);
+        enqueue(x, y - 1);
+      }
+    }
+  }
+  return out;
+}
+
 /**
  * Convert a Jimp image instance to ASCII art.
  * @param {import("jimp").Jimp} image
@@ -402,7 +473,8 @@ export function convertImage(image, options = {}) {
   const ramp = getRamp(opts.ramp);
   if (ramp.length < 2) throw new Error("Ramp needs at least 2 characters");
 
-  const prepared = prepareForSampling(image, opts.columns, opts.cellAspect, opts.quality);
+  const flatImg = flattenBackground(image, opts.background);
+  const prepared = prepareForSampling(flatImg, opts.columns, opts.cellAspect, opts.quality);
   let grid = sampleLumaGrid(prepared.image, prepared.cols, prepared.rows, opts.metric);
 
   const useRelief =
