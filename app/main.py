@@ -9,6 +9,7 @@ from flask import Flask, flash, redirect, render_template, request, url_for
 from werkzeug.utils import secure_filename
 
 from .character_builder import build_character_from_image
+from anime_ascii import AsciiOptions, convert_path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 UPLOAD_DIR = BASE_DIR / "uploads"
@@ -54,7 +55,13 @@ def index():
             or query in s["series_vibe"].lower()
             or query in s["mood"].lower()
         ]
-    return render_template("index.html", sheet=None, saved_sheets=saved, query=query)
+    return render_template(
+        "index.html",
+        sheet=None,
+        ascii_art=None,
+        saved_sheets=saved,
+        query=query,
+    )
 
 
 @app.route("/build", methods=["POST"])
@@ -81,10 +88,23 @@ def build():
     out_path = OUTPUT_DIR / f"{Path(filename).stem}_sheet.json"
     out_path.write_text(json.dumps(sheet.to_dict(), indent=2), encoding="utf-8")
 
+    ascii_opts = AsciiOptions(
+        columns=int(request.form.get("columns") or 72),
+        invert=request.form.get("invert") == "on",
+        edge_boost=0.2,
+        contrast=1.15,
+        ramp=request.form.get("ramp") or "classic",
+    )
+    ascii_art = convert_path(save_path, ascii_opts)
+    ascii_path = OUTPUT_DIR / f"{Path(filename).stem}_ascii.txt"
+    ascii_path.write_text(ascii_art + "\n", encoding="utf-8")
+
     return render_template(
         "index.html",
         sheet=sheet.to_dict(),
         saved_as=out_path.name,
+        ascii_art=ascii_art,
+        ascii_saved_as=ascii_path.name,
         saved_sheets=list_saved_sheets(),
         query="",
     )

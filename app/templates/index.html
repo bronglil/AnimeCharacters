@@ -10,8 +10,8 @@
   <main class="page">
     <header class="hero">
       <p class="brand">AnimeCharacters</p>
-      <h1>Build a character sheet from an image</h1>
-      <p class="lede">Upload a reference photo or sketch. We pull a palette and draft editable character fields.</p>
+      <h1>Build ASCII character designs from an image</h1>
+      <p class="lede">Upload a reference photo or sketch. We render an accurate ASCII silhouette and draft a character sheet.</p>
     </header>
 
     {% with messages = get_flashed_messages() %}
@@ -33,8 +33,36 @@
         Reference image
         <input type="file" name="image" accept="image/*" required />
       </label>
-      <button type="submit">Build character sheet</button>
+      <label>
+        ASCII width
+        <input type="number" name="columns" value="72" min="20" max="200" />
+      </label>
+      <label>
+        Character ramp
+        <select name="ramp">
+          <option value="classic" selected>classic ( .:-=+*#%@)</option>
+          <option value="soft">soft</option>
+          <option value="compact">compact</option>
+          <option value="dense">dense</option>
+          <option value="blocks">blocks</option>
+        </select>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="invert" />
+        Invert mapping (for light subjects on dark photos)
+      </label>
+      <button type="submit">Build ASCII + character sheet</button>
     </form>
+
+    {% if ascii_art %}
+      <section class="ascii" aria-labelledby="ascii-title">
+        <h2 id="ascii-title">ASCII design</h2>
+        {% if ascii_saved_as %}
+          <p class="meta">Saved as <code>{{ ascii_saved_as }}</code></p>
+        {% endif %}
+        <pre>{{ ascii_art }}</pre>
+      </section>
+    {% endif %}
 
     {% if sheet %}
       <section class="sheet" aria-labelledby="sheet-title">

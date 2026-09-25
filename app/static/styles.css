@@ -74,6 +74,43 @@ body {
   gap: 1rem;
 }
 
+label.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+select,
+input[type="number"] {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #121820;
+  color: var(--ink);
+}
+
+.ascii {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background: #05070a;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: auto;
+}
+
+.ascii h2 {
+  margin: 0 0 0.5rem;
+}
+
+.ascii pre {
+  margin: 0;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 10px;
+  line-height: 1.05;
+  color: #d7dde5;
+  white-space: pre;
+}
+
 label {
   display: grid;
   gap: 0.4rem;

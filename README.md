@@ -1,18 +1,23 @@
 # AnimeCharacters
 
-Build anime-style character sheets from a reference image.
+Build **accurate ASCII character designs** from images — the classic bust / silhouette look made of `.:-=+*#%@` glyphs — plus an optional character sheet from the same upload.
 
-Upload a photo or drawing, extract a simple visual profile (palette, brightness, aspect cues), and turn it into a structured character sheet you can edit and export.
+The conversion library lives in `src/anime_ascii` and is installable as `anime-ascii`.
 
-## Features
+## Why this conversion is accurate
 
-- Image upload and local processing (no account required)
-- Automatic color palette extraction
-- Character sheet scaffold (name, vibe, colors, notes)
-- Lightweight web UI for review and edits
-- Filter previously saved character sheets
+Inspired by techniques used in projects like [ascii-forge](https://github.com/runawaydevil/ascii-forge) and [AdvancedAsciiArt](https://github.com/VoxelCubes/AdvancedAsciiArt) (implemented independently here):
 
-## Quick start
+| Technique | Purpose |
+|-----------|---------|
+| Linear-light → CIE L*-style luminance | Correct brightness, not raw RGB averages |
+| Cell aspect correction (~0.5) | Stops monospace output looking stretched |
+| Autocontrast (percentile stretch) | Keeps midtones from collapsing into one glyph |
+| Density-ordered ramps | Classic ` .:-=+*#%@` matches common silhouette art |
+| Optional edge boost | Strengthens outlines for bust / portrait shapes |
+| Optional invert + dither | Terminal aesthetic and smoother ramps |
+
+## Install
 
 ```bash
 python -m venv .venv
@@ -21,29 +26,61 @@ python -m venv .venv
 # macOS / Linux
 source .venv/bin/activate
 
-pip install -r requirements.txt
+pip install -e ".[dev,web]"
+```
+
+## Library usage
+
+```python
+from PIL import Image
+from anime_ascii import AsciiOptions, convert_image, convert_path
+
+art = convert_path(
+    "portrait.png",
+    AsciiOptions(columns=80, invert=False, edge_boost=0.2),
+)
+print(art)
+
+# Or from an already-open image
+art = convert_image(Image.open("portrait.png"), AsciiOptions(columns=72, ramp="classic"))
+```
+
+### CLI
+
+```bash
+anime-ascii portrait.png -w 80 -o out.txt
+anime-ascii portrait.png --invert --edge-boost 0.25
+anime-ascii --list-ramps
+```
+
+For dark silhouettes on a light background (typical bust photo), leave invert off so the figure becomes dense `@#%` glyphs. Use `--invert` when the subject is light on a dark photo.
+
+## Web UI
+
+```bash
 python -m app.main
 ```
 
-Open [http://127.0.0.1:7860](http://127.0.0.1:7860).
+Open http://127.0.0.1:7860 — upload an image to preview ASCII + a draft character sheet.
 
-## Tests
+## Tests (18 synthetic images + your example when present)
 
 ```bash
-pytest
+pytest -q
 ```
+
+Fixtures cover black/white, gradients, circles, bust silhouettes, checkerboards, anime-style faces, alpha PNGs, color subjects, and more. Each image is converted and checked for dimensions, ramp membership, and luminance→density accuracy.
 
 ## Project layout
 
 ```
-app/
-  main.py              # entry point
-  image_analysis.py    # palette + image stats
-  character_builder.py # image → character sheet
-  static/              # CSS / JS
-  templates/           # HTML
-uploads/               # local uploads (gitignored)
-outputs/               # exported sheets (gitignored)
+src/anime_ascii/     # installable ASCII package
+  converter.py
+  luminance.py
+  ramps.py
+  cli.py
+app/                 # optional Flask UI
+tests/               # accuracy suite + fixture generator
 ```
 
 ## License
