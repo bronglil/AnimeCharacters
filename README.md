@@ -71,16 +71,24 @@ pytest -q
 
 Fixtures cover black/white, gradients, circles, bust silhouettes, checkerboards, anime-style faces, alpha PNGs, color subjects, and more. Each image is converted and checked for dimensions, ramp membership, and luminance→density accuracy.
 
+## npm package
+
+JavaScript/TypeScript consumers can use the package in [`js/`](js/):
+
+```bash
+cd js
+npm install
+npm test
+npx anime-ascii ../path/to/image.png -w 80
+```
+
 ## Project layout
 
 ```
-src/anime_ascii/     # installable ASCII package
-  converter.py
-  luminance.py
-  ramps.py
-  cli.py
+src/anime_ascii/     # Python ASCII package
+js/                  # npm package (anime-ascii)
 app/                 # optional Flask UI
-tests/               # accuracy suite + fixture generator
+tests/               # Python accuracy suite
 ```
 
 ## License
