@@ -1,57 +1,37 @@
-# anime-ascii (npm)
+# anime-ascii
 
-Convert images into accurate ASCII character designs (bust / silhouette style).
-
-Same approach as the Python package: linear-light luminance, L*-style mapping, monospace cell aspect, classic ` .:-=+*#%@` ramp.
-
-## Features
-
-- Accurate box-filter sampling (area average in linear light / L*)
-- Default ramp matches `image-to-ascii`: ` .,:;i1tfLCG08@`
-- `style: "relief"` for hollow-face / dense-shoulder bust silhouettes
-- Local contrast for photo detail (better than flat fill)
-- CLI + library API
-
+Convert images to ASCII art (Node.js).
 
 ```bash
-cd js
 npm install
-npm link   # optional, exposes `anime-ascii` CLI
+npx anime-ascii photo.png -w 64 --style relief -r classic
 ```
-
-Or from the package folder after publish:
-
-```bash
-npm install anime-ascii
-```
-
-## Usage
 
 ```js
-import { convertPath, convertImage, AsciiOptions } from "anime-ascii";
+import { convertPath } from "anime-ascii";
 
-const art = await convertPath(path, {
-  columns: 80,
-  style: "relief", // hollow face + dense shoulders for silhouettes
+const art = await convertPath("photo.png", {
+  columns: 64,
+  style: "relief",
   ramp: "classic",
 });
 console.log(art);
 ```
 
-### CLI
+## Sample
 
-```bash
-npx anime-ascii portrait.png -w 80 -o out.txt
-npx anime-ascii bust.png --style relief -r classic -w 64
-npx anime-ascii photo.png --style fill --metric lstar
-npx anime-ascii --list-ramps
 ```
-
-`style: "auto"` (default) uses **relief** for near-binary silhouettes and **fill** + local contrast for photos — more accurate than flat `image-to-ascii` fill.
-## Tests
-
-```bash
-npm test
+                         ******
+                      *********#**
+                    *****++==++*****
+                   **+=--::::::--=+*#
+                   #*+=--::..::--=+*#
+                        ##*++*##
+                 #########*++*##########
+              ###*******++++++++*******###
+           #%###****+++++++++++++++++***###%#
+         #%%%###############################%%%
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ```
 
 ## License
