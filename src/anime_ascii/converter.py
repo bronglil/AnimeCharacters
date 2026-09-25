@@ -137,7 +137,9 @@ def _apply_relief(grid: list[list[float]], opts: AsciiOptions) -> list[list[floa
     w = len(grid[0]) if h else 0
     flat = [v for row in grid for v in row]
     ordered = sorted(flat)
-    thr = ordered[int(len(ordered) * 0.45)] if ordered else 0.5
+    lo = ordered[int(len(ordered) * 0.05)] if ordered else 0.0
+    hi = ordered[int(len(ordered) * 0.95)] if ordered else 1.0
+    thr = (lo + hi) / 2.0
     mask = [[v < thr for v in row] for row in grid]
     ink = sum(1 for row in mask for v in row if v)
     if ink < w * h * 0.05:

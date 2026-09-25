@@ -197,15 +197,21 @@ function distanceTransform(mask) {
 }
 
 /**
- * Turn flat silhouettes into hollow-face / dense-shoulder busts
- * (the look of classic ASCII portrait examples).
+ * Classic bust look (matches common ASCII portrait examples):
+ * - sparse `.` / `:` face interior
+ * - denser outline on the contour
+ * - narrow neck
+ * - solid `%` / `@` shoulders at the base
  */
 function applyRelief(lumaGrid, opts) {
   const h = lumaGrid.length;
   const w = lumaGrid[0]?.length ?? 0;
   const flat = lumaGrid.flat();
   const sorted = [...flat].sort((a, b) => a - b);
-  const thr = sorted[Math.floor(sorted.length * 0.45)] ?? 0.5;
+  // Midpoint between dark and light peaks — avoids marking near-white as ink
+  const lo = sorted[Math.floor(sorted.length * 0.05)] ?? 0;
+  const hi = sorted[Math.floor(sorted.length * 0.95)] ?? 1;
+  const thr = (lo + hi) / 2;
 
   const mask = lumaGrid.map((row) => row.map((v) => v < thr));
   const inkCount = mask.flat().filter(Boolean).length;
@@ -221,25 +227,54 @@ function applyRelief(lumaGrid, opts) {
     }
   }
 
+  // Find silhouette vertical span for relative head/neck/shoulder bands
+  let yMin = h;
+  let yMax = 0;
+  for (let y = 0; y < h; y++) {
+    if (mask[y].some(Boolean)) {
+      yMin = Math.min(yMin, y);
+      yMax = Math.max(yMax, y);
+    }
+  }
+  const span = Math.max(yMax - yMin, 1);
+
   const out = Array.from({ length: h }, () => Array(w).fill(1));
   for (let y = 0; y < h; y++) {
-    const depth = h <= 1 ? 0 : y / (h - 1);
+    const rel = (y - yMin) / span; // 0 top of bust → 1 bottom
     for (let x = 0; x < w; x++) {
       if (!mask[y][x]) {
         out[y][x] = 1;
         continue;
       }
-      const d = dist[y][x] / maxD;
-      const edge = Math.exp(-d * 5);
-      const hollow = Math.pow(d, 0.85) * opts.reliefHollow;
-      const shoulders = Math.pow(depth, 1.6) * opts.reliefBase;
-      const faceLift = (1 - depth) * (1 - depth) * d * 0.55;
-      // High luma → light glyph. Edges + base stay darker; face center lifts.
-      let luma = clamp01(0.08 + hollow * 0.92 + faceLift);
-      luma *= 1 - shoulders * 0.92;
-      luma = Math.min(luma, 1 - edge * opts.reliefEdge);
-      luma = luma * 0.9 + lumaGrid[y][x] * 0.1;
-      out[y][x] = clamp01(luma);
+
+      const d = dist[y][x] / maxD; // 0 edge → 1 center
+      const onEdge = d < 0.1;
+      const nearEdge = d < 0.22;
+      const inHead = rel < 0.4;
+      const inNeck = rel >= 0.4 && rel < 0.55;
+      const inShoulders = rel >= 0.55;
+
+      // density 0 = light glyph (.), 1 = dense glyph (@)
+      let density = 0.1;
+      if (inHead) {
+        if (onEdge) density = 0.72;
+        else if (nearEdge) density = 0.45;
+        else density = 0.06 + (1 - d) * 0.08; // hollow face → . :
+        // crown a bit heavier
+        if (rel < 0.12 && nearEdge) density = Math.max(density, 0.8);
+      } else if (inNeck) {
+        density = onEdge || nearEdge ? 0.4 : 0.18;
+      } else {
+        // shoulders: solid base, denser toward bottom
+        density = 0.78 + rel * 0.22;
+        if (onEdge) density = Math.max(density, 0.9);
+        density = Math.min(1, density + (1 - d) * 0.08);
+      }
+
+      // subtle noise so face isn't a flat field of identical dots
+      density = clamp01(density + (((x * 13 + y * 29) % 7) - 3) * 0.012);
+
+      out[y][x] = clamp01(1 - density);
     }
   }
   return out;
