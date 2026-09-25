@@ -10,7 +10,7 @@ import { DEFAULT_RAMP, getRamp } from "./ramps.js";
 /**
  * @typedef {Object} AsciiOptions
  * @property {number} [columns=80]
- * @property {number} [cellAspect=0.5]  // like image-to-ascii pxWidth=2
+ * @property {number} [cellAspect=0.5]
  * @property {string} [ramp]
  * @property {boolean} [invert=false]
  * @property {boolean} [autocontrast=true]
@@ -20,32 +20,40 @@ import { DEFAULT_RAMP, getRamp } from "./ramps.js";
  * @property {number} [edgeBoost=0]
  * @property {boolean} [dither=false]
  * @property {"lstar"|"average"} [metric="lstar"]
- * @property {"fill"|"relief"|"auto"} [style="auto"]
- * @property {number} [reliefHollow=0.75]
- * @property {number} [reliefEdge=0.9]
- * @property {number} [reliefBase=0.55]
- * @property {number} [localContrast=0.35]
+ * @property {"fill"|"relief"|"auto"|"portrait"} [style="auto"]
+ * @property {number} [reliefHollow=0.95]
+ * @property {number} [reliefEdge=0.95]
+ * @property {number} [reliefBase=0.8]
+ * @property {number} [localContrast=0.45]
+ * @property {"fast"|"high"} [quality="fast"]
  */
 
 /** @returns {Required<AsciiOptions>} */
 export function normalizeOptions(options = {}) {
+  const style = options.style ?? "auto";
+  const portraitDefaults =
+    style === "portrait"
+      ? { ramp: "classic", localContrast: 0.55, edgeBoost: 0.22, cellAspect: 0.48, contrast: 1.15 }
+      : {};
+
   return {
     columns: options.columns ?? 80,
-    cellAspect: options.cellAspect ?? 0.5,
-    ramp: options.ramp ?? DEFAULT_RAMP,
+    cellAspect: options.cellAspect ?? portraitDefaults.cellAspect ?? 0.5,
+    ramp: options.ramp ?? portraitDefaults.ramp ?? DEFAULT_RAMP,
     invert: Boolean(options.invert),
     autocontrast: options.autocontrast !== false,
     brightness: options.brightness ?? 0,
-    contrast: options.contrast ?? 1,
+    contrast: options.contrast ?? portraitDefaults.contrast ?? 1,
     gamma: options.gamma ?? 1,
-    edgeBoost: options.edgeBoost ?? 0,
+    edgeBoost: options.edgeBoost ?? portraitDefaults.edgeBoost ?? 0,
     dither: Boolean(options.dither),
     metric: options.metric === "average" ? "average" : "lstar",
-    style: options.style ?? "auto",
+    style,
     reliefHollow: options.reliefHollow ?? 0.95,
     reliefEdge: options.reliefEdge ?? 0.95,
     reliefBase: options.reliefBase ?? 0.8,
-    localContrast: options.localContrast ?? 0.35,
+    localContrast: options.localContrast ?? portraitDefaults.localContrast ?? 0.45,
+    quality: options.quality === "high" ? "high" : "fast",
   };
 }
 
@@ -53,75 +61,82 @@ function clamp01(v) {
   return Math.max(0, Math.min(1, v));
 }
 
-function pixelMetric(r, g, b, a, metric) {
+function pixelLuma(r, g, b, a, metric) {
   const alpha = a / 255;
   if (metric === "average") {
-    // image-to-ascii / asciify-pixel intensity, normalized to 0..1
     return ((r + g + b) * alpha) / (255 * 3);
   }
-  // Composite on mid-gray then L*
   const bg = 128;
-  const cr = Math.round(r * alpha + bg * (1 - alpha));
-  const cg = Math.round(g * alpha + bg * (1 - alpha));
-  const cb = Math.round(b * alpha + bg * (1 - alpha));
+  const cr = r * alpha + bg * (1 - alpha);
+  const cg = g * alpha + bg * (1 - alpha);
+  const cb = b * alpha + bg * (1 - alpha);
   return srgb8ToLstar(cr, cg, cb);
 }
 
 /**
- * Box-filter sample: average every source pixel that falls in an ASCII cell.
- * Much more accurate than resizing first then reading one pixel.
+ * Downscale large images before sampling — big speed win, little quality loss.
+ * `high` keeps ~4 samples per cell; `fast` ~2.
  */
-function sampleLumaGrid(image, columns, cellAspect, metric) {
+function prepareForSampling(image, columns, cellAspect, quality) {
   const cols = Math.max(1, Math.min(Math.trunc(columns), 1000));
   const aspect = Math.max(0.2, Math.min(Number(cellAspect), 1.5));
+  const rows = Math.max(1, Math.round((image.bitmap.height / image.bitmap.width) * cols * aspect));
+  const scale = quality === "high" ? 4 : 2;
+  const targetW = cols * scale;
+  const targetH = rows * scale;
+
+  if (image.bitmap.width <= targetW && image.bitmap.height <= targetH) {
+    return { image, cols, rows };
+  }
+
+  const resized = image.clone().resize({ w: targetW, h: targetH });
+  return { image: resized, cols, rows };
+}
+
+/** Area-average each ASCII cell from the (possibly downscaled) bitmap. */
+function sampleLumaGrid(image, cols, rows, metric) {
   const srcW = image.bitmap.width;
   const srcH = image.bitmap.height;
-  const rows = Math.max(1, Math.round((srcH / srcW) * cols * aspect));
   const { data } = image.bitmap;
   const grid = [];
 
   for (let cy = 0; cy < rows; cy++) {
     const y0 = Math.floor((cy * srcH) / rows);
-    const y1 = Math.floor(((cy + 1) * srcH) / rows);
+    const y1 = Math.max(Math.floor(((cy + 1) * srcH) / rows), y0 + 1);
     const row = [];
     for (let cx = 0; cx < cols; cx++) {
       const x0 = Math.floor((cx * srcW) / cols);
-      const x1 = Math.floor(((cx + 1) * srcW) / cols);
+      const x1 = Math.max(Math.floor(((cx + 1) * srcW) / cols), x0 + 1);
       let sumLin = 0;
       let sumAvg = 0;
       let n = 0;
-      for (let y = y0; y < Math.max(y1, y0 + 1); y++) {
-        for (let x = x0; x < Math.max(x1, x0 + 1); x++) {
-          const i = (srcW * y + x) * 4;
+      for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+          const i = (srcW * y + x) << 2;
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
           const a = data[i + 3];
           if (metric === "average") {
-            sumAvg += pixelMetric(r, g, b, a, "average");
+            sumAvg += pixelLuma(r, g, b, a, "average");
           } else {
             const alpha = a / 255;
             const bg = 128;
-            const cr = r * alpha + bg * (1 - alpha);
-            const cg = g * alpha + bg * (1 - alpha);
-            const cb = b * alpha + bg * (1 - alpha);
-            // Accumulate in linear light for a true area average
+            const cr = (r * alpha + bg * (1 - alpha)) / 255;
+            const cg = (g * alpha + bg * (1 - alpha)) / 255;
+            const cb = (b * alpha + bg * (1 - alpha)) / 255;
             sumLin +=
-              0.2126 * srgbToLinear(cr / 255) +
-              0.7152 * srgbToLinear(cg / 255) +
-              0.0722 * srgbToLinear(cb / 255);
+              0.2126 * srgbToLinear(cr) +
+              0.7152 * srgbToLinear(cg) +
+              0.0722 * srgbToLinear(cb);
           }
           n++;
         }
       }
-      if (n === 0) {
-        row.push(0.5);
-      } else if (metric === "average") {
-        row.push(sumAvg / n);
-      } else {
-        // Convert mean linear Y → L*
+      if (!n) row.push(0.5);
+      else if (metric === "average") row.push(sumAvg / n);
+      else {
         const y = sumLin / n;
-        // inline lightnessLstar
         const f =
           y <= (6 / 29) ** 3
             ? (y * (29 / 6) ** 2) / 3 + 4 / 29
@@ -166,7 +181,6 @@ function edgeGridFromLuma(grid) {
   return out;
 }
 
-/** Chamfer distance to nearest background (non-mask) cell. */
 function distanceTransform(mask) {
   const h = mask.length;
   const w = mask[0]?.length ?? 0;
@@ -196,84 +210,94 @@ function distanceTransform(mask) {
   return dist;
 }
 
+/** Width profile → find neck (narrowest band in upper half). */
+function findNeckRel(mask, yMin, yMax) {
+  const span = Math.max(yMax - yMin, 1);
+  let bestRel = 0.45;
+  let bestWidth = Infinity;
+  for (let y = yMin; y <= yMax; y++) {
+    const rel = (y - yMin) / span;
+    if (rel < 0.28 || rel > 0.62) continue;
+    let left = -1;
+    let right = -1;
+    for (let x = 0; x < mask[y].length; x++) {
+      if (mask[y][x]) {
+        if (left < 0) left = x;
+        right = x;
+      }
+    }
+    const width = right - left;
+    if (width > 0 && width < bestWidth) {
+      bestWidth = width;
+      bestRel = rel;
+    }
+  }
+  return bestRel;
+}
+
 /**
- * Classic bust look (matches common ASCII portrait examples):
- * - sparse `.` / `:` face interior
- * - denser outline on the contour
- * - narrow neck
- * - solid `%` / `@` shoulders at the base
+ * Anatomy-aware bust shading using the silhouette's own neck pinch.
  */
 function applyRelief(lumaGrid, opts) {
   const h = lumaGrid.length;
   const w = lumaGrid[0]?.length ?? 0;
   const flat = lumaGrid.flat();
   const sorted = [...flat].sort((a, b) => a - b);
-  // Midpoint between dark and light peaks — avoids marking near-white as ink
   const lo = sorted[Math.floor(sorted.length * 0.05)] ?? 0;
   const hi = sorted[Math.floor(sorted.length * 0.95)] ?? 1;
   const thr = (lo + hi) / 2;
 
   const mask = lumaGrid.map((row) => row.map((v) => v < thr));
   const inkCount = mask.flat().filter(Boolean).length;
-  if (inkCount < w * h * 0.05) {
-    return lumaGrid.map((row) => row.slice());
-  }
+  if (inkCount < w * h * 0.05) return lumaGrid.map((row) => row.slice());
 
   const dist = distanceTransform(mask);
   let maxD = 1e-6;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (mask[y][x] && dist[y][x] > maxD) maxD = dist[y][x];
-    }
-  }
-
-  // Find silhouette vertical span for relative head/neck/shoulder bands
   let yMin = h;
   let yMax = 0;
   for (let y = 0; y < h; y++) {
-    if (mask[y].some(Boolean)) {
+    for (let x = 0; x < w; x++) {
+      if (!mask[y][x]) continue;
       yMin = Math.min(yMin, y);
       yMax = Math.max(yMax, y);
+      if (dist[y][x] > maxD) maxD = dist[y][x];
     }
   }
   const span = Math.max(yMax - yMin, 1);
+  const neckRel = findNeckRel(mask, yMin, yMax);
 
   const out = Array.from({ length: h }, () => Array(w).fill(1));
   for (let y = 0; y < h; y++) {
-    const rel = (y - yMin) / span; // 0 top of bust → 1 bottom
+    const rel = (y - yMin) / span;
     for (let x = 0; x < w; x++) {
       if (!mask[y][x]) {
         out[y][x] = 1;
         continue;
       }
+      const d = dist[y][x] / maxD;
+      const onEdge = d < 0.09;
+      const nearEdge = d < 0.2;
+      const inHead = rel < neckRel - 0.02;
+      const inNeck = Math.abs(rel - neckRel) < 0.08;
+      const inShoulders = rel > neckRel + 0.06;
 
-      const d = dist[y][x] / maxD; // 0 edge → 1 center
-      const onEdge = d < 0.1;
-      const nearEdge = d < 0.22;
-      const inHead = rel < 0.4;
-      const inNeck = rel >= 0.4 && rel < 0.55;
-      const inShoulders = rel >= 0.55;
-
-      // density 0 = light glyph (.), 1 = dense glyph (@)
-      let density = 0.1;
+      let density = 0.12;
       if (inHead) {
-        if (onEdge) density = 0.72;
-        else if (nearEdge) density = 0.45;
-        else density = 0.06 + (1 - d) * 0.08; // hollow face → . :
-        // crown a bit heavier
-        if (rel < 0.12 && nearEdge) density = Math.max(density, 0.8);
+        // Egg head: heavier crown + jaw outline, hollow cheeks/face
+        const jaw = rel > neckRel - 0.12;
+        if (onEdge) density = jaw ? 0.68 : 0.78;
+        else if (nearEdge) density = 0.4;
+        else density = 0.05 + (1 - d) * 0.1;
+        if (rel < 0.1 && nearEdge) density = Math.max(density, 0.85);
       } else if (inNeck) {
-        density = onEdge || nearEdge ? 0.4 : 0.18;
-      } else {
-        // shoulders: solid base, denser toward bottom
-        density = 0.78 + rel * 0.22;
-        if (onEdge) density = Math.max(density, 0.9);
-        density = Math.min(1, density + (1 - d) * 0.08);
+        density = onEdge || nearEdge ? 0.38 : 0.14;
+      } else if (inShoulders) {
+        const down = (rel - neckRel) / Math.max(1 - neckRel, 0.01);
+        density = 0.72 + down * 0.28;
+        if (onEdge) density = Math.max(density, 0.88);
       }
 
-      // subtle noise so face isn't a flat field of identical dots
-      density = clamp01(density + (((x * 13 + y * 29) % 7) - 3) * 0.012);
-
+      density = clamp01(density + (((x * 13 + y * 29) % 7) - 3) * 0.01);
       out[y][x] = clamp01(1 - density);
     }
   }
@@ -306,6 +330,20 @@ function applyLocalContrast(grid, amount) {
   return out;
 }
 
+/** Mix edges into tone so facial features / jawlines survive in photos. */
+function applyPortraitEdges(grid, boost) {
+  if (boost <= 0) return grid;
+  const edges = edgeGridFromLuma(grid);
+  const b = clamp01(boost);
+  return grid.map((row, y) =>
+    row.map((v, x) => {
+      // Darken edges; lift flat midtones slightly so face planes read
+      const e = edges[y][x];
+      return clamp01(v * (1 - b * e) + 0.04 * b * (1 - e) * (v > 0.25 && v < 0.85 ? 1 : 0));
+    }),
+  );
+}
+
 function isNearlyBinary(grid) {
   const flat = grid.flat();
   let lo = 0;
@@ -319,7 +357,7 @@ function isNearlyBinary(grid) {
 
 function adjust(values, opts) {
   let data = values;
-  if (opts.autocontrast) data = percentileStretch(data, 5, 95);
+  if (opts.autocontrast) data = percentileStretch(data, 4, 96);
   return data.map((v) => {
     let x = applyGamma(v, opts.gamma);
     x = (x - 0.5) * opts.contrast + 0.5 + opts.brightness;
@@ -364,26 +402,20 @@ export function convertImage(image, options = {}) {
   const ramp = getRamp(opts.ramp);
   if (ramp.length < 2) throw new Error("Ramp needs at least 2 characters");
 
-  let grid = sampleLumaGrid(image, opts.columns, opts.cellAspect, opts.metric);
+  const prepared = prepareForSampling(image, opts.columns, opts.cellAspect, opts.quality);
+  let grid = sampleLumaGrid(prepared.image, prepared.cols, prepared.rows, opts.metric);
 
   const useRelief =
     opts.style === "relief" || (opts.style === "auto" && isNearlyBinary(grid));
+  const usePortrait = opts.style === "portrait" || (opts.style === "auto" && !useRelief);
 
   if (useRelief) {
     grid = applyRelief(grid, opts);
   } else {
-    if (opts.localContrast > 0) {
-      grid = applyLocalContrast(grid, opts.localContrast);
-    }
-    if (opts.edgeBoost > 0) {
-      const edges = edgeGridFromLuma(grid);
-      const boost = clamp01(opts.edgeBoost);
-      for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[y].length; x++) {
-          grid[y][x] = clamp01(grid[y][x] * (1 - boost * edges[y][x]));
-        }
-      }
-    }
+    const contrastAmt = usePortrait ? Math.max(opts.localContrast, 0.45) : opts.localContrast;
+    if (contrastAmt > 0) grid = applyLocalContrast(grid, contrastAmt);
+    const edgeAmt = usePortrait ? Math.max(opts.edgeBoost, 0.18) : opts.edgeBoost;
+    if (edgeAmt > 0) grid = applyPortraitEdges(grid, edgeAmt);
   }
 
   const flat = grid.flat();
@@ -392,9 +424,7 @@ export function convertImage(image, options = {}) {
   const h = grid.length;
   const w = grid[0]?.length ?? 0;
   let rebuilt = [];
-  for (let y = 0; y < h; y++) {
-    rebuilt.push(adjusted.slice(y * w, (y + 1) * w));
-  }
+  for (let y = 0; y < h; y++) rebuilt.push(adjusted.slice(y * w, (y + 1) * w));
   if (opts.dither) rebuilt = floydSteinberg(rebuilt, ramp.length);
 
   return rebuilt
@@ -402,19 +432,11 @@ export function convertImage(image, options = {}) {
     .join("\n");
 }
 
-/**
- * @param {string} path
- * @param {AsciiOptions} [options]
- */
 export async function convertPath(path, options = {}) {
   const image = await Jimp.read(path);
   return convertImage(image, options);
 }
 
-/**
- * @param {Buffer} buffer
- * @param {AsciiOptions} [options]
- */
 export async function convertBuffer(buffer, options = {}) {
   const image = await Jimp.read(buffer);
   return convertImage(image, options);
