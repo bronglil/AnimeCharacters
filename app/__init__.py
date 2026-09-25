@@ -1,0 +1,1 @@
+"""AnimeCharacters application package."""

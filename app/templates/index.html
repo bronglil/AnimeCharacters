@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AnimeCharacters</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="brand">AnimeCharacters</p>
+      <h1>Build a character sheet from an image</h1>
+      <p class="lede">Upload a reference photo or sketch. We pull a palette and draft editable character fields.</p>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flash">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form class="upload" action="{{ url_for('build') }}" method="post" enctype="multipart/form-data">
+      <label>
+        Character name
+        <input type="text" name="name" placeholder="e.g. Hana Kuro" maxlength="80" />
+      </label>
+      <label>
+        Reference image
+        <input type="file" name="image" accept="image/*" required />
+      </label>
+      <button type="submit">Build character sheet</button>
+    </form>
+
+    {% if sheet %}
+      <section class="sheet" aria-labelledby="sheet-title">
+        <h2 id="sheet-title">{{ sheet.name }}</h2>
+        {% if saved_as %}
+          <p class="meta">Saved as <code>{{ saved_as }}</code></p>
+        {% endif %}
+        <dl>
+          <div><dt>Series vibe</dt><dd>{{ sheet.series_vibe }}</dd></div>
+          <div><dt>Mood</dt><dd>{{ sheet.mood }}</dd></div>
+          <div>
+            <dt>Hair</dt>
+            <dd><span class="swatch" style="background:{{ sheet.hair_color }}"></span>{{ sheet.hair_color }}</dd>
+          </div>
+          <div>
+            <dt>Eyes</dt>
+            <dd><span class="swatch" style="background:{{ sheet.eye_color }}"></span>{{ sheet.eye_color }}</dd>
+          </div>
+          <div>
+            <dt>Outfit</dt>
+            <dd class="palette">
+              {% for color in sheet.outfit_colors %}
+                <span class="swatch" style="background:{{ color }}" title="{{ color }}"></span>
+              {% endfor %}
+            </dd>
+          </div>
+          <div><dt>Notes</dt><dd>{{ sheet.notes }}</dd></div>
+        </dl>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>
