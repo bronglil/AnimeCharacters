@@ -10,6 +10,7 @@ Upload a photo or drawing, extract a simple visual profile (palette, brightness,
 - Automatic color palette extraction
 - Character sheet scaffold (name, vibe, colors, notes)
 - Lightweight web UI for review and edits
+- Filter previously saved character sheets
 
 ## Quick start
 
@@ -25,6 +26,12 @@ python -m app.main
 ```
 
 Open [http://127.0.0.1:7860](http://127.0.0.1:7860).
+
+## Tests
+
+```bash
+pytest
+```
 
 ## Project layout
 

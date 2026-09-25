@@ -155,6 +155,76 @@ dd {
   flex-wrap: wrap;
 }
 
+.history {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background: color-mix(in srgb, var(--panel) 92%, black);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.history-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.history h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.search {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.search input[type="search"] {
+  min-width: min(240px, 70vw);
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #121820;
+  color: var(--ink);
+}
+
+.sheet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.sheet-list li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.sheet-list li span,
+.sheet-list li code {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media (max-width: 560px) {
   dl > div {
     grid-template-columns: 1fr;

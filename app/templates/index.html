@@ -65,6 +65,30 @@
         </dl>
       </section>
     {% endif %}
+
+    <section class="history" aria-labelledby="history-title">
+      <div class="history-head">
+        <h2 id="history-title">Saved sheets</h2>
+        <form class="search" method="get" action="{{ url_for('index') }}">
+          <label class="sr-only" for="q">Filter saved sheets</label>
+          <input id="q" type="search" name="q" value="{{ query or '' }}" placeholder="Filter by name, vibe, mood" />
+          <button type="submit">Filter</button>
+        </form>
+      </div>
+      {% if saved_sheets %}
+        <ul class="sheet-list">
+          {% for item in saved_sheets %}
+            <li>
+              <strong>{{ item.name }}</strong>
+              <span>{{ item.series_vibe }} · {{ item.mood }}</span>
+              <code>{{ item.file }}</code>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="meta">No saved sheets yet{% if query %} matching “{{ query }}”{% endif %}.</p>
+      {% endif %}
+    </section>
   </main>
 </body>
 </html>

@@ -23,9 +23,38 @@ def allowed_file(filename: str) -> bool:
     return Path(filename).suffix.lower() in ALLOWED_EXTENSIONS
 
 
+def list_saved_sheets() -> list[dict]:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    sheets: list[dict] = []
+    for path in sorted(OUTPUT_DIR.glob("*_sheet.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        sheets.append(
+            {
+                "file": path.name,
+                "name": data.get("name", path.stem),
+                "series_vibe": data.get("series_vibe", ""),
+                "mood": data.get("mood", ""),
+            }
+        )
+    return sheets
+
+
 @app.route("/", methods=["GET"])
 def index():
-    return render_template("index.html", sheet=None)
+    query = (request.args.get("q") or "").strip().lower()
+    saved = list_saved_sheets()
+    if query:
+        saved = [
+            s
+            for s in saved
+            if query in s["name"].lower()
+            or query in s["series_vibe"].lower()
+            or query in s["mood"].lower()
+        ]
+    return render_template("index.html", sheet=None, saved_sheets=saved, query=query)
 
 
 @app.route("/build", methods=["POST"])
@@ -52,7 +81,13 @@ def build():
     out_path = OUTPUT_DIR / f"{Path(filename).stem}_sheet.json"
     out_path.write_text(json.dumps(sheet.to_dict(), indent=2), encoding="utf-8")
 
-    return render_template("index.html", sheet=sheet.to_dict(), saved_as=out_path.name)
+    return render_template(
+        "index.html",
+        sheet=sheet.to_dict(),
+        saved_as=out_path.name,
+        saved_sheets=list_saved_sheets(),
+        query="",
+    )
 
 
 def main() -> None:
