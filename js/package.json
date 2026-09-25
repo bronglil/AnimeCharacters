@@ -17,7 +17,9 @@
   ],
   "scripts": {
     "test": "node --test test/**/*.test.js",
-    "convert": "node ./bin/anime-ascii.js"
+    "convert": "node ./bin/anime-ascii.js",
+    "build:characters": "node ./scripts/build-character-designs.js",
+    "gallery": "npx --yes serve .. -p 5173"
   },
   "keywords": [
     "ascii",

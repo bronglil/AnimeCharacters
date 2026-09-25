@@ -7,56 +7,27 @@ cd js && npm install
 npx anime-ascii photo.png -w 72 --style fill -r classic --quality high
 ```
 
-```js
-import { convertPath } from "anime-ascii";
+## Design cards (10 characters × 4 styles)
 
-console.log(
-  await convertPath("pikachu.png", {
-    columns: 72,
-    style: "fill",
-    ramp: "classic",
-    quality: "high",
-  }),
-);
+```bash
+# from repo root
+npx --yes serve . -p 5173
+# open http://localhost:5173/gallery/
 ```
 
-## Sample — [Pikachu #025](https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/025.png)
+Pick a character card, then a design card (Classic Clean, Classic Dense, Standard Soft, Dither Detail).
 
-```
-                .=
-               -@@-
-             .*@@@#
-             +@@@%*                                             :-
-            .@@=::+                         .::::---.        .--:=:
-            +=-:--+                   :::--%@@@@@@@@:      -=-....+
-            +----+:               --=*=---=@@@@@@@+.     -+-::.::--=
-            *----#:::::::.    :=++-------=@@@@@+:.     =*---::::---#
-            #---=-:..::--=++=#=---------+@@%-..      =+------------*.
-           :+:.::::::+=*@+----=++++*#+=-:..        =*=--------------+
-         :%=-..:::---@@@@#:---==+%:              =*+===========----=+
-        :@@@=-=--:---=#%=-*#%+===+*            -#+++============++-.
-        %*@+++#%%%@@-:::+@@@@@+++++*         .%++========++++#+-
-       .@@-::-*@@@@@-:--%@@@@@+=+++*=        .%+++=+=+++++#*-
-        #@@--:-#@@@@+=+++@@@@*==++++#:         #+++*+++#=-
-         +@*++==*@@@==++========+*+++#:         %##*%+:
-           -**+++============*#@**=-==*-         @%%@.
-      .:--==++===++===++++==#@+***%----@#     .+@@@@@@
-   :###-----------===++++++++%=*%**==---+*. -%@@@@@@+:
-   =%%*------------------====+*-+++++-----+- *@@@@
-    =--==+**+++#-----------------====------+@  +@@@-
-               .*---------------------------*@-+@@@@@
-                :+--------------------------=#@@@#+-
-                 *--------------------------+##@@=
-                 +::-----------------------=###@+=
-                 =------------===-------=+*####+
-                  #===--=+*#%%%%%######%%%####@:
-                   =%@#%%%%@%+-::-=*#@@%%%##%@-
-                     .-*@@@=           :::@@@@+
-                        #@@=              .@@@#
-                          :                 .=
-```
+Characters: Bulbasaur, Charmander, Squirtle, Pikachu, Charizard, Jigglypuff, Meowth, Gengar, Eevee, Mewtwo.
 
-Full output: [`samples/pikachu.txt`](samples/pikachu.txt)
+## Sample — Pikachu
+
+See [`samples/pikachu.txt`](samples/pikachu.txt) and [`samples/characters/`](samples/characters/).
+
+## Tests
+
+```bash
+cd js && npm test
+```
 
 ## License
 

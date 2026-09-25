@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>anime-ascii · Design Cards</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p class="brand">anime-ascii</p>
+      <h1>Character design cards</h1>
+      <p class="lede">Pick a character, then choose a design style.</p>
+    </div>
+    <div class="selection" id="selection">
+      <span class="muted">Nothing selected</span>
+    </div>
+  </header>
+
+  <section class="block">
+    <h2>1 · Characters</h2>
+    <div class="grid" id="char-grid"></div>
+  </section>
+
+  <section class="block">
+    <h2>2 · Designs</h2>
+    <div class="grid designs" id="design-grid"></div>
+  </section>
+
+  <section class="block preview-block">
+    <div class="preview-head">
+      <h2>Preview</h2>
+      <button type="button" id="copy-btn" disabled>Copy ASCII</button>
+    </div>
+    <pre id="preview" class="ascii">Select a character and a design…</pre>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
