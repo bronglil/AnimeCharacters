@@ -37,6 +37,40 @@ npm install @lilbrong/anime-ascii
 npm install @bronglil/anime-ascii
 ```
 
+## Output formats
+
+Choose what to generate — **text**, **html**, **ansi**, and/or **png** (pic):
+
+```js
+import { convertPathColored } from "@lilbrong/anime-ascii";
+
+// text + html only
+const card = await convertPathColored("photo.png", {
+  formats: ["text", "html"],
+});
+
+// PNG image of the ASCII glyphs
+const pic = await convertPathColored("photo.png", {
+  formats: ["png"],
+  style: "anime",
+  imageScale: 2,
+});
+// pic.png → Buffer (write with fs.writeFileSync("out.png", pic.png))
+```
+
+CLI:
+
+```bash
+npx anime-ascii photo.png --format text
+npx anime-ascii photo.png --format html -o card.html
+npx anime-ascii photo.png --format png --style anime -o card.png
+npx anime-ascii photo.png --format text,html,png -o out
+# → out.txt  out.html  out.png
+
+# same with flags
+npx anime-ascii photo.png --text --html --pic -o out
+```
+
 ## Why this vs jp2a / caca / ImageMagick?
 
 - **Node-native** ESM API + TypeScript types (`ConvertOptions` / `ConvertResult`)

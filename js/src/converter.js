@@ -7,6 +7,8 @@ import {
 } from "./luminance.js";
 import { DEFAULT_RAMP, getRamp } from "./ramps.js";
 import { toAnsi, toHtml, toPlain } from "./color_emit.js";
+import { toPng } from "./ascii_image.js";
+import { defaultFormats, formatsWereSpecified, resolveFormats } from "./formats.js";
 
 /**
  * @typedef {Object} AsciiOptions
@@ -31,6 +33,17 @@ import { toAnsi, toHtml, toPlain } from "./color_emit.js";
  * @property {"fast"|"high"} [quality="fast"]
  * @property {"auto"|"white"|"none"} [background="auto"]
  *   auto = flatten transparent / edge-connected near-black to white (sprites)
+ * @property {boolean} [image]
+ *   Deprecated alias for png — prefer `formats: ["png"]` or `png: true`
+ * @property {boolean} [png]
+ * @property {boolean} [pic] alias of png
+ * @property {boolean} [text]
+ * @property {boolean} [html]
+ * @property {boolean} [ansi]
+ * @property {Array<"text"|"html"|"ansi"|"png"|"pic"|"all">} [formats]
+ *   Choose outputs: text, html, ansi, png (pic). Default depends on CLI -o / --color.
+ * @property {number} [imageScale=2]
+ *   Upsample factor for the PNG (1–8)
  */
 
 /**
@@ -835,11 +848,53 @@ export function convertImage(image, options = {}) {
 
 /**
  * Convert with color: plain text, HTML, and ANSI truecolor.
+ * For PNG of the glyphs, use convertPathColored / convertBufferColored (or `toPng(cells)`).
  * @param {import("jimp").Jimp} image
  * @param {AsciiOptions} [options]
  */
 export function convertImageColored(image, options = {}) {
   return convertImageCore(image, options);
+}
+
+/**
+ * @param {{ text: string, html: string, ansi: string, cells: import('./color_emit.js').AsciiCell[][] }} result
+ * @param {AsciiOptions} [options]
+ * @param {{ outputPath?: string|null, color?: boolean }} [hint]
+ */
+async function applyOutputFormats(result, options = {}, hint = {}) {
+  let formats;
+  if (formatsWereSpecified(options)) {
+    formats = resolveFormats(options);
+  } else if (hint.fromCli) {
+    formats = defaultFormats(hint);
+  } else {
+    // Library default: cheap outputs always; PNG only when asked
+    formats = new Set(["text", "html", "ansi"]);
+  }
+
+  if (formats.size === 0) {
+    throw new Error(
+      'anime-ascii: no output formats selected. Use formats: ["text"|"html"|"ansi"|"png"].',
+    );
+  }
+
+  /** @type {Record<string, unknown>} */
+  const out = { cells: result.cells, formats: [...formats] };
+
+  if (formats.has("text")) out.text = result.text;
+  if (formats.has("html")) out.html = result.html;
+  if (formats.has("ansi")) out.ansi = result.ansi;
+
+  if (formats.has("png")) {
+    const look = options.look === "dense" ? "dense" : "ascii";
+    const scale = options.imageScale ?? 2;
+    out.png = await toPng(result.cells, {
+      variant: look === "dense" ? "dense" : "glyph",
+      scale,
+    });
+  }
+
+  return out;
 }
 
 export async function convertPath(path, options = {}) {
@@ -859,7 +914,10 @@ export async function convertPathColored(path, options = {}) {
   } catch (err) {
     wrapImageError(path, err);
   }
-  return convertImageColored(image, options);
+  const base = convertImageColored(image, options);
+  return applyOutputFormats(base, options, {
+    color: options.ansi === true || options.formats?.includes?.("ansi"),
+  });
 }
 
 export async function convertBuffer(buffer, options = {}) {
@@ -879,5 +937,11 @@ export async function convertBufferColored(buffer, options = {}) {
   } catch (err) {
     wrapImageError(buffer, err);
   }
-  return convertImageColored(image, options);
+  const base = convertImageColored(image, options);
+  return applyOutputFormats(base, options, {
+    color: options.ansi === true || options.formats?.includes?.("ansi"),
+  });
 }
+
+export { toPng } from "./ascii_image.js";
+export { resolveFormats, defaultFormats } from "./formats.js";

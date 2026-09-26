@@ -3,6 +3,7 @@
  */
 
 export type LookPreset = "ascii" | "dense";
+export type OutputFormat = "text" | "html" | "ansi" | "png" | "pic" | "all";
 
 export interface LookPresetSpec {
   readonly columns: number;
@@ -48,6 +49,18 @@ export interface AsciiOptions {
   localContrast?: number;
   quality?: "fast" | "high";
   background?: "auto" | "white" | "none";
+  /** Choose outputs: text, html, ansi, png (pic). Library default = text+html+ansi (no png). */
+  formats?: OutputFormat[];
+  text?: boolean;
+  html?: boolean;
+  ansi?: boolean;
+  png?: boolean;
+  /** Alias of png */
+  pic?: boolean;
+  /** Deprecated alias of png */
+  image?: boolean;
+  /** PNG upsample factor 1–8 (default 2). */
+  imageScale?: number;
 }
 
 export interface AsciiCell {
@@ -58,10 +71,14 @@ export interface AsciiCell {
 }
 
 export interface ColoredAscii {
-  text: string;
-  html: string;
-  ansi: string;
   cells: AsciiCell[][];
+  /** Which formats were produced */
+  formats?: string[];
+  text?: string;
+  html?: string;
+  ansi?: string;
+  /** PNG buffer when formats includes png/pic */
+  png?: Buffer;
 }
 
 /** Alias for consumers who prefer this name. */
@@ -73,7 +90,26 @@ export declare const RAMPS: Record<string, string>;
 export declare const DEFAULT_RAMP: string;
 export declare function getRamp(nameOrChars: string): string;
 
-export declare function normalizeOptions(options?: AsciiOptions): Required<AsciiOptions>;
+export declare function normalizeOptions(options?: AsciiOptions): Required<
+  Omit<
+    AsciiOptions,
+    | "image"
+    | "imageScale"
+    | "formats"
+    | "text"
+    | "html"
+    | "ansi"
+    | "png"
+    | "pic"
+  >
+> &
+  AsciiOptions;
+
+export declare function resolveFormats(options?: AsciiOptions): Set<string>;
+export declare function defaultFormats(hint?: {
+  outputPath?: string | null;
+  color?: boolean;
+}): Set<string>;
 
 export declare function convertImage(image: unknown, options?: AsciiOptions): string;
 export declare function convertImageColored(image: unknown, options?: AsciiOptions): ColoredAscii;
@@ -94,6 +130,16 @@ export declare function toHtml(
 ): string;
 export declare function toAnsi(rows: AsciiCell[][]): string;
 export declare function toPlain(rows: AsciiCell[][]): string;
+
+export declare function toPng(
+  rows: AsciiCell[][],
+  options?: {
+    variant?: "glyph" | "dense";
+    scale?: number;
+    background?: { r: number; g: number; b: number };
+    pad?: number;
+  },
+): Promise<Buffer>;
 
 export declare function srgb8ToLstar(r: number, g: number, b: number): number;
 export declare function srgbToLinear(c: number): number;

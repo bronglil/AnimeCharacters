@@ -1,48 +1,58 @@
 #!/usr/bin/env node
 import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { convertPath, convertPathColored, RAMPS, LOOK_PRESETS, PORTRAIT_COLUMNS } from "../src/index.js";
+import { resolve, join, dirname, basename, extname } from "node:path";
+import {
+  convertPath,
+  convertPathColored,
+  RAMPS,
+  LOOK_PRESETS,
+  PORTRAIT_COLUMNS,
+} from "../src/index.js";
 
 function printHelp() {
   console.log(`Usage: anime-ascii <image> [options]
 
-Looks (presets — gallery / CLI / API share the same numbers):
-  --look ascii            Readable glyphs · ${LOOK_PRESETS.ascii.columns} columns (default)
-                          · portrait → ${PORTRAIT_COLUMNS.ascii} cols for face coverage
-  --look dense            Near-photo mosaic · ${LOOK_PRESETS.dense.columns} columns
-                          · portrait → ${PORTRAIT_COLUMNS.dense} cols
+Looks:
+  --look ascii            Readable glyphs · ${LOOK_PRESETS.ascii.columns} cols (default)
+                          portrait → ${PORTRAIT_COLUMNS.ascii} cols
+  --look dense            Finer mosaic · ${LOOK_PRESETS.dense.columns} cols
+                          portrait → ${PORTRAIT_COLUMNS.dense} cols
 
-Options:
-  -o, --output <file>     Write output (.html → colored HTML, else text/ANSI)
-  -w, --columns <n>       Override preset column width
-  -r, --ramp <name|chars> Ramp name or custom string
-      --cell-aspect <f>   Character cell aspect ratio
-      --invert            Invert luminance mapping
-      --no-autocontrast   Disable percentile stretch
-      --brightness <f>    Brightness offset
-      --contrast <f>      Contrast multiplier
-      --gamma <f>         Gamma
-      --edge-boost <f>    Edge emphasis 0..1
+Output formats (pick any combination):
+  --format <list>         Comma list: text, html, ansi, png (pic), all
+  --text                  Emit plain ASCII text
+  --html                  Emit colored HTML
+  --ansi / --color        Emit ANSI truecolor
+  --png / --pic           Emit PNG image of the ASCII glyphs
+
+  -o, --output <path>     Output file or basename
+                          .png / .html / .txt / .ansi set format if --format omitted
+                          With several formats, path is treated as a basename:
+                            -o out --format text,html,png
+                            → out.txt  out.html  out.png
+
+Other:
+  -w, --columns <n>       Override width
+  -r, --ramp <name|chars> Ramp
       --style <mode>      auto | fill | relief | portrait | anime
-                          anime = your face + cel outline polish (no morph)
-      --metric <name>     lstar | average
-      --quality <mode>    fast (default) | high
-      --color             Emit ANSI truecolor (or HTML if -o *.html)
-      --dither            Floyd-Steinberg dither
-      --list-ramps        Print built-in ramps
-  -h, --help              Show help
+      --quality <mode>    fast | high
+      --image-scale <n>   PNG scale (default 2)
+      --dither
+      --list-ramps
+  -h, --help
 
 Examples:
-  anime-ascii photo.png --look ascii --style anime --color
-  anime-ascii photo.png --look ascii --style portrait --color
-  anime-ascii sprite.png --look dense --color -o out.html
-  anime-ascii photo.png -w 48 --color
+  anime-ascii photo.png --format text
+  anime-ascii photo.png --format html -o card.html
+  anime-ascii photo.png --format png --style anime -o card.png
+  anime-ascii photo.png --format text,html,png -o out
+  anime-ascii photo.png --text --html --pic -o out
 `);
 }
 
 function parseArgs(argv) {
   const args = {
-    image: null,
+    imagePath: null,
     output: null,
     columns: null,
     look: "ascii",
@@ -58,7 +68,9 @@ function parseArgs(argv) {
     style: "auto",
     metric: "lstar",
     quality: "fast",
-    color: false,
+    formats: [],
+    flags: { text: false, html: false, ansi: false, png: false },
+    imageScale: 2,
     listRamps: false,
     help: false,
   };
@@ -119,23 +131,71 @@ function parseArgs(argv) {
       case "--quality":
         args.quality = next();
         break;
+      case "--format":
+      case "--formats": {
+        const list = String(next())
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        args.formats.push(...list);
+        break;
+      }
+      case "--text":
+        args.flags.text = true;
+        break;
+      case "--html":
+        args.flags.html = true;
+        break;
+      case "--ansi":
       case "--color":
-        args.color = true;
+        args.flags.ansi = true;
+        break;
+      case "--png":
+      case "--pic":
+      case "--image":
+        args.flags.png = true;
+        break;
+      case "--image-scale":
+        args.imageScale = Number(next());
         break;
       case "--dither":
         args.dither = true;
         break;
       default:
-        if (a.startsWith("-")) {
-          throw new Error(`Unknown option: ${a}`);
-        }
-        args.image = a;
+        if (a.startsWith("-")) throw new Error(`Unknown option: ${a}`);
+        args.imagePath = a;
     }
   }
   return args;
 }
 
-function buildOpts(args) {
+function formatsFromOutputPath(output) {
+  if (!output) return [];
+  const ext = extname(output).toLowerCase();
+  if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".webp") return ["png"];
+  if (ext === ".html" || ext === ".htm") return ["html"];
+  if (ext === ".ansi") return ["ansi"];
+  if (ext === ".txt" || ext === ".text" || ext === ".asc") return ["text"];
+  return [];
+}
+
+function resolveCliFormats(args) {
+  const fromFlags = [];
+  if (args.flags.text) fromFlags.push("text");
+  if (args.flags.html) fromFlags.push("html");
+  if (args.flags.ansi) fromFlags.push("ansi");
+  if (args.flags.png) fromFlags.push("png");
+
+  const listed = [...args.formats, ...fromFlags];
+  if (listed.length) return listed;
+
+  const fromOut = formatsFromOutputPath(args.output);
+  if (fromOut.length) return fromOut;
+
+  return ["text"];
+}
+
+function buildOpts(args, formats) {
   const opts = {
     look: args.look === "dense" ? "dense" : "ascii",
     invert: args.invert,
@@ -144,6 +204,8 @@ function buildOpts(args) {
     style: args.style,
     metric: args.metric,
     quality: args.quality,
+    imageScale: args.imageScale,
+    formats,
   };
   if (args.columns != null) opts.columns = args.columns;
   if (args.ramp != null) opts.ramp = args.ramp;
@@ -153,6 +215,33 @@ function buildOpts(args) {
   if (args.gamma != null) opts.gamma = args.gamma;
   if (args.edgeBoost != null) opts.edgeBoost = args.edgeBoost;
   return opts;
+}
+
+function outputPaths(output, formats) {
+  /** @type {Record<string, string|null>} */
+  const paths = { text: null, html: null, ansi: null, png: null };
+  if (!output) return paths;
+
+  const ext = extname(output).toLowerCase();
+  const known = [".png", ".html", ".htm", ".txt", ".text", ".asc", ".ansi"];
+  const multi = formats.length > 1 || !known.includes(ext);
+
+  if (!multi && known.includes(ext)) {
+    if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".webp") paths.png = output;
+    else if (ext === ".html" || ext === ".htm") paths.html = output;
+    else if (ext === ".ansi") paths.ansi = output;
+    else paths.text = output;
+    return paths;
+  }
+
+  const dir = dirname(output);
+  const base = basename(output, extname(output));
+  const stem = join(dir === "." ? "" : dir, base);
+  if (formats.includes("text")) paths.text = `${stem}.txt`;
+  if (formats.includes("html")) paths.html = `${stem}.html`;
+  if (formats.includes("ansi")) paths.ansi = `${stem}.ansi`;
+  if (formats.includes("png")) paths.png = `${stem}.png`;
+  return paths;
 }
 
 async function main() {
@@ -167,26 +256,70 @@ async function main() {
     }
     return 0;
   }
-  if (!args.image) {
+  if (!args.imagePath) {
     printHelp();
     return 1;
   }
 
-  const opts = buildOpts(args);
+  const formats = resolveCliFormats(args);
+  const opts = buildOpts(args, formats);
+  const needsRich =
+    formats.includes("html") ||
+    formats.includes("ansi") ||
+    formats.includes("png") ||
+    formats.includes("all");
 
-  if (args.color) {
-    const rich = await convertPathColored(resolve(args.image), opts);
-    if (args.output) {
-      const out = String(args.output);
-      if (out.endsWith(".html")) writeFileSync(out, rich.html + "\n", "utf8");
-      else writeFileSync(out, rich.ansi + "\n", "utf8");
-    } else {
+  const paths = outputPaths(args.output, formats.includes("all")
+    ? ["text", "html", "ansi", "png"]
+    : formats);
+
+  if (!needsRich && formats.length === 1 && formats[0] === "text") {
+    const art = await convertPath(resolve(args.imagePath), opts);
+    if (paths.text) writeFileSync(paths.text, art + "\n", "utf8");
+    else console.log(art);
+    return 0;
+  }
+
+  const rich = await convertPathColored(resolve(args.imagePath), opts);
+  const wrote = [];
+
+  if (rich.text != null) {
+    if (paths.text) {
+      writeFileSync(paths.text, rich.text + "\n", "utf8");
+      wrote.push(paths.text);
+    } else if (!args.output && formats.includes("text") && !formats.includes("ansi")) {
+      console.log(rich.text);
+    }
+  }
+  if (rich.html != null) {
+    if (paths.html) {
+      writeFileSync(paths.html, rich.html + "\n", "utf8");
+      wrote.push(paths.html);
+    } else if (!args.output && formats.includes("html") && formats.length === 1) {
+      console.log(rich.html);
+    }
+  }
+  if (rich.ansi != null) {
+    if (paths.ansi) {
+      writeFileSync(paths.ansi, rich.ansi + "\n", "utf8");
+      wrote.push(paths.ansi);
+    } else if (!args.output && (formats.includes("ansi") || (!formats.includes("text") && !formats.includes("html") && !formats.includes("png")))) {
+      console.log(rich.ansi);
+    } else if (!args.output && formats.includes("ansi") && !paths.text) {
       console.log(rich.ansi);
     }
-  } else {
-    const art = await convertPath(resolve(args.image), opts);
-    if (args.output) writeFileSync(args.output, art + "\n", "utf8");
-    else console.log(art);
+  }
+  if (rich.png != null) {
+    if (paths.png) {
+      writeFileSync(paths.png, rich.png);
+      wrote.push(paths.png);
+    } else if (!args.output) {
+      throw new Error("PNG format needs -o path.png (or -o basename with --format png)");
+    }
+  }
+
+  if (wrote.length) {
+    console.error(`Wrote: ${wrote.join(", ")}`);
   }
   return 0;
 }

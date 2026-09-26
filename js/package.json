@@ -1,6 +1,6 @@
 {
   "name": "@lilbrong/anime-ascii",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Node image-to-colored-ASCII — readable glyphs for bots, CLIs, and web previews",
   "type": "module",
   "main": "./src/index.js",

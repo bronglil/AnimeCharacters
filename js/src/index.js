@@ -11,6 +11,9 @@ export {
   convertBuffer,
   convertBufferColored,
   normalizeOptions,
+  toPng,
+  resolveFormats,
+  defaultFormats,
 } from "./converter.js";
 export { toHtml, toAnsi, toPlain } from "./color_emit.js";
 export {
