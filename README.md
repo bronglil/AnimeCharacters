@@ -4,6 +4,14 @@
 
 Anime sprites and portraits are the *hook* — the API is general. Same call turns a PNG into readable glyphs with truecolor HTML/ANSI.
 
+<p align="center">
+  <img src="samples/sajid/sajid.png" alt="Input portrait" width="220" />
+  &nbsp;&nbsp;
+  <img src="samples/sajid/sajid-ascii.png" alt="Output: colored ASCII" width="220" />
+</p>
+
+<p align="center"><sub>Photo → colored ASCII (<code>look: ascii</code>, <code>style: anime</code>) — <a href="samples/sajid/">samples/sajid/</a></sub></p>
+
 ```bash
 npm install @lilbrong/anime-ascii
 npx anime-ascii photo.png --format text,html,png -o out
@@ -55,7 +63,7 @@ Use **jp2a** when you need raw C speed and plain mono. Use **this** when you wan
 | Landscape | [`samples/general/landscape`](samples/general/landscape.txt) |
 | Diagram | [`samples/general/diagram`](samples/general/diagram.txt) |
 | Meme-style face | [`samples/general/meme`](samples/general/meme.txt) |
-| Portrait + anime polish | [`samples/sajid/`](samples/sajid/) |
+| Portrait (photo + ASCII) | [`samples/sajid/sajid.png`](samples/sajid/sajid.png) → [`sajid-ascii.png`](samples/sajid/sajid-ascii.png) |
 | Character cards | [`gallery/`](gallery/) |
 
 ## Performance (measured, Node 24 · this machine)
