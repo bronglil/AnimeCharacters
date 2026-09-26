@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to publish to npm (e.g. v0.5.1)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -13,21 +19,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
           cache-dependency-path: js/package-lock.json
+          registry-url: https://registry.npmjs.org
 
       - name: Pack npm tarball
+        id: pack
         working-directory: js
         run: |
           npm ci
+          npm test
           npm pack
+          echo "tarball=$(ls anime-ascii-*.tgz | head -1)" >> "$GITHUB_OUTPUT"
           ls -la anime-ascii-*.tgz
 
       - name: Create GitHub Release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -37,3 +50,17 @@ jobs:
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm
+        working-directory: js
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "::warning::NPM_TOKEN secret is not set — skipping npm publish."
+            echo "Add Settings → Secrets and variables → Actions → NPM_TOKEN (npm automation token)."
+            echo "Then re-run this workflow (Actions → Release → Run workflow) with tag v0.5.1."
+            exit 0
+          fi
+          npm publish --access public
+          echo "Published $(node -p "require('./package.json').name+'@'+require('./package.json').version")"
