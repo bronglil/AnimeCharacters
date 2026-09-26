@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>anime-ascii — image → colored ASCII for Node</title>
+  <meta name="description" content="Node-native image to colored ASCII for bots, CLIs, CI logs, and web previews. Truecolor HTML, ANSI, text, and PNG." />
+  <meta property="og:title" content="anime-ascii" />
+  <meta property="og:description" content="Image → colored ASCII for Node — bots, CLIs, and web previews." />
+  <meta property="og:image" content="https://bronglil.github.io/AnimeCharacters/assets/hero-ascii.png" />
+  <meta property="og:url" content="https://bronglil.github.io/AnimeCharacters/" />
+  <link rel="canonical" href="https://bronglil.github.io/AnimeCharacters/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <a class="nav-brand" href="./">anime-ascii</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#install">Install</a>
+      <a href="#api">API</a>
+      <a href="#looks">Looks</a>
+      <a href="https://github.com/bronglil/AnimeCharacters">GitHub</a>
+      <a href="https://www.npmjs.com/package/@lilbrong/anime-ascii">npm</a>
+    </nav>
+  </header>
+
+  <section class="hero" aria-label="Introduction">
+    <div class="hero-visual" aria-hidden="true">
+      <img src="assets/hero-ascii.png" alt="" width="900" height="1257" />
+      <div class="hero-veil"></div>
+    </div>
+    <div class="hero-copy">
+      <p class="brand">anime-ascii</p>
+      <h1>Image → colored ASCII for Node</h1>
+      <p class="lede">Readable glyphs with truecolor HTML, ANSI, text, and PNG — built for bots, CLIs, and CI logs.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#install">Get started</a>
+        <a class="btn btn-ghost" href="https://github.com/bronglil/AnimeCharacters">View source</a>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section class="section" id="install">
+      <h2>Install</h2>
+      <p class="section-lede">Scoped package on npmjs. Node.js 18+.</p>
+      <pre class="code"><code>npm install @lilbrong/anime-ascii
+npx anime-ascii photo.png --format text,html,png -o out</code></pre>
+      <p class="note">Also on <a href="https://github.com/bronglil/AnimeCharacters/packages">GitHub Packages</a> as <code>@bronglil/anime-ascii</code>.</p>
+    </section>
+
+    <section class="section example" id="example">
+      <h2>Example</h2>
+      <p class="section-lede">Portrait photo with anime-style polish — same face, cel outline, no morph.</p>
+      <div class="compare">
+        <figure>
+          <img src="assets/sajid-thumb.png" alt="Source portrait photo" width="480" height="679" />
+          <figcaption>Input</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/hero-ascii.png" alt="Colored ASCII output" width="900" height="1257" />
+          <figcaption>Output · look ascii · style anime</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="api">
+      <h2>API</h2>
+      <p class="section-lede">One call. Pick the formats you need.</p>
+      <pre class="code"><code>import { convertPathColored } from "@lilbrong/anime-ascii";
+import "@lilbrong/anime-ascii/ascii.css";
+
+const { text, html, ansi, png } = await convertPathColored("photo.png", {
+  look: "ascii",
+  style: "anime",
+  formats: ["text", "html", "ansi", "png"],
+});</code></pre>
+    </section>
+
+    <section class="section" id="looks">
+      <h2>Looks &amp; formats</h2>
+      <p class="section-lede">Locked presets shared by API, CLI, and gallery.</p>
+      <div class="split">
+        <div>
+          <h3>Looks</h3>
+          <ul class="plain">
+            <li><strong>ascii</strong> — 56 cols (portrait 64). Readable glyphs for bots and logs.</li>
+            <li><strong>dense</strong> — 72 cols (portrait 80). Max detail when readability is secondary.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Formats</h3>
+          <ul class="plain">
+            <li><strong>text</strong> — plain glyphs</li>
+            <li><strong>html</strong> — truecolor spans + CSS</li>
+            <li><strong>ansi</strong> — terminal truecolor</li>
+            <li><strong>png</strong> — rendered ASCII picture</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="why">
+      <h2>Why this</h2>
+      <p class="section-lede">Use jp2a for mono C-speed. Use anime-ascii inside JS.</p>
+      <ul class="plain why-list">
+        <li>First-class Node ESM API and TypeScript types</li>
+        <li>Truecolor HTML + ANSI in one conversion</li>
+        <li>Presets instead of a flag maze</li>
+        <li>~50ms sprites · ~45–80ms portraits (Node 24)</li>
+      </ul>
+    </section>
+
+    <section class="section links" id="links">
+      <h2>Docs &amp; links</h2>
+      <ul class="link-list">
+        <li><a href="https://github.com/bronglil/AnimeCharacters">Repository</a></li>
+        <li><a href="https://www.npmjs.com/package/@lilbrong/anime-ascii">npm · @lilbrong/anime-ascii</a></li>
+        <li><a href="https://github.com/bronglil/AnimeCharacters/wiki">Wiki</a></li>
+        <li><a href="https://github.com/bronglil/AnimeCharacters/tree/master/gallery">Character gallery (repo)</a></li>
+        <li><a href="https://github.com/bronglil/AnimeCharacters/blob/master/LICENSE">MIT License</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p><strong>anime-ascii</strong> by sajid · MIT</p>
+  </footer>
+
+  <script>
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce) {
+      document.documentElement.classList.add("motion");
+    }
+  </script>
+</body>
+</html>

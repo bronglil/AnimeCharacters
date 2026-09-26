@@ -94,6 +94,9 @@ cd js && npm test
 
 ## Docs
 
-Package README: [`js/README.md`](js/README.md) · Wiki pages in [`wiki/`](wiki/) · License: MIT
+- **Site:** [bronglil.github.io/AnimeCharacters](https://bronglil.github.io/AnimeCharacters/)
+- Package README: [`js/README.md`](js/README.md)
+- Wiki: [`wiki/`](wiki/)
+- License: MIT
 
 Default branch: **`master`**.

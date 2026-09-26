@@ -2,6 +2,8 @@
 
 Node **image → colored ASCII** (readable glyphs, not a photo mosaic). Anime is the demo aesthetic; the API is general.
 
+**Site:** [bronglil.github.io/AnimeCharacters](https://bronglil.github.io/AnimeCharacters/)
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/bronglil/AnimeCharacters/master/samples/sajid/sajid.png" alt="Input portrait" width="220" />
   &nbsp;&nbsp;
