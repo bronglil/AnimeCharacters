@@ -3,12 +3,12 @@
 Node **image → colored ASCII** (readable glyphs, not a photo mosaic). Anime is the demo aesthetic; the API is general.
 
 ```bash
-npm install anime-ascii
+npm install @lilbrong/anime-ascii
 ```
 
 ```js
-import { convertPathColored } from "anime-ascii";
-import "anime-ascii/ascii.css"; // or: import "anime-ascii/ascii.vars.css"
+import { convertPathColored } from "@lilbrong/anime-ascii";
+import "@lilbrong/anime-ascii/ascii.css"; // or: import "@lilbrong/anime-ascii/ascii.vars.css"
 
 const { html, text, ansi } = await convertPathColored("./hero.png", {
   look: "ascii",
@@ -49,7 +49,7 @@ Non-anime samples in the repo: `samples/general/{landscape,diagram,meme}.*`
 | `dense` | **72** / portrait **80** | Finer mosaic when you want detail over readability (gallery, print). Or set `columns` explicitly. |
 
 ```js
-import { LOOK_PRESETS, PORTRAIT_COLUMNS, MIN_COLUMNS, MAX_COLUMNS } from "anime-ascii";
+import { LOOK_PRESETS, PORTRAIT_COLUMNS, MIN_COLUMNS, MAX_COLUMNS } from "@lilbrong/anime-ascii";
 ```
 
 ## Validation
@@ -63,8 +63,8 @@ Measured locally (Node 24): sprite ≈ **50ms**, portrait ≈ **45–80ms**, hea
 ## CSS
 
 ```js
-import "anime-ascii/ascii.css";       // full theme (imports variables)
-import "anime-ascii/ascii.vars.css";  // tokens only — style `.ascii-color` yourself
+import "@lilbrong/anime-ascii/ascii.css";       // full theme (imports variables)
+import "@lilbrong/anime-ascii/ascii.vars.css";  // tokens only — style `.ascii-color` yourself
 ```
 
 Override tokens:

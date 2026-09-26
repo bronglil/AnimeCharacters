@@ -5,13 +5,13 @@
 Anime sprites and portraits are the *hook* — the API is general. Same call turns a PNG into readable glyphs with truecolor HTML/ANSI.
 
 ```bash
-npm install anime-ascii
+npm install @lilbrong/anime-ascii
 npx anime-ascii photo.png --look ascii --color
 ```
 
 ```js
-import { convertPathColored } from "anime-ascii";
-import "anime-ascii/ascii.css";
+import { convertPathColored } from "@lilbrong/anime-ascii";
+import "@lilbrong/anime-ascii/ascii.css";
 
 const { text, html, ansi } = await convertPathColored("photo.png", {
   look: "ascii",

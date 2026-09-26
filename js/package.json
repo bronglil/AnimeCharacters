@@ -1,5 +1,5 @@
 {
-  "name": "anime-ascii",
+  "name": "@lilbrong/anime-ascii",
   "version": "0.5.1",
   "description": "Node image-to-colored-ASCII — readable glyphs for bots, CLIs, and web previews",
   "type": "module",
@@ -16,7 +16,7 @@
     "./ascii.vars.css": "./src/ascii.vars.css"
   },
   "bin": {
-    "anime-ascii": "./bin/anime-ascii.js"
+    "anime-ascii": "bin/anime-ascii.js"
   },
   "files": [
     "src",
@@ -53,7 +53,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bronglil/AnimeCharacters.git",
+    "url": "git+https://github.com/bronglil/AnimeCharacters.git",
     "directory": "js"
   },
   "homepage": "https://github.com/bronglil/AnimeCharacters/wiki",

@@ -2,7 +2,7 @@
 
 Node **image → colored ASCII** for bots, CLIs, CI logs, and web previews. Anime demos are the hook — the API is general.
 
-**Package:** [`anime-ascii`](https://www.npmjs.com/package/anime-ascii) · **Repo:** [bronglil/AnimeCharacters](https://github.com/bronglil/AnimeCharacters) (`master`)
+**Package:** [`@lilbrong/anime-ascii`](https://www.npmjs.com/package/anime-ascii) · **Repo:** [bronglil/AnimeCharacters](https://github.com/bronglil/AnimeCharacters) (`master`)
 
 ## Pages
 
@@ -16,7 +16,7 @@ Node **image → colored ASCII** for bots, CLIs, CI logs, and web previews. Anim
 ## Quick start
 
 ```bash
-npm install anime-ascii
+npm install @lilbrong/anime-ascii
 npx anime-ascii photo.png --look ascii --color
 ```
 
