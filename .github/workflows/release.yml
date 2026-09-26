@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to (re)publish (e.g. v0.5.1)"
+        description: "Existing tag to (re)publish (e.g. v0.5.2)"
         required: true
         type: string
 
@@ -59,20 +59,40 @@ jobs:
             echo "::warning::NPM_TOKEN secret is not set — skipping npmjs publish."
             exit 0
           fi
-          # ensure npmjs scope name
           npm pkg set name=@lilbrong/anime-ascii
-          npm publish --access public
-          echo "Published $(node -p "require('./package.json').name+'@'+require('./package.json').version") to npmjs"
+          VER=$(node -p "require('./package.json').version")
+          set +e
+          OUT=$(npm publish --access public 2>&1)
+          CODE=$?
+          set -e
+          echo "$OUT"
+          if [ $CODE -eq 0 ]; then
+            echo "Published @lilbrong/anime-ascii@$VER to npmjs"
+          elif echo "$OUT" | grep -qiE 'E409|cannot publish over existing|previously published'; then
+            echo "::notice::@lilbrong/anime-ascii@$VER already on npmjs — skipping"
+          else
+            exit $CODE
+          fi
 
       - name: Publish to GitHub Packages (@bronglil/anime-ascii)
         working-directory: js
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # GitHub Packages requires scope = GitHub owner
           npm pkg set name=@bronglil/anime-ascii
           npm pkg set publishConfig.registry=https://npm.pkg.github.com
           echo "@bronglil:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish
-          echo "Published @bronglil/anime-ascii@$(node -p "require('./package.json').version") to GitHub Packages"
+          VER=$(node -p "require('./package.json').version")
+          set +e
+          OUT=$(npm publish 2>&1)
+          CODE=$?
+          set -e
+          echo "$OUT"
+          if [ $CODE -eq 0 ]; then
+            echo "Published @bronglil/anime-ascii@$VER to GitHub Packages"
+          elif echo "$OUT" | grep -qiE 'E409|cannot publish over existing|previously published'; then
+            echo "::notice::@bronglil/anime-ascii@$VER already on GitHub Packages — skipping"
+          else
+            exit $CODE
+          fi
