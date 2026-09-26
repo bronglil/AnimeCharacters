@@ -64,12 +64,74 @@ export const PORTRAIT_COLUMNS = Object.freeze({
   dense: 80,
 });
 
+export const MIN_COLUMNS = 8;
+export const MAX_COLUMNS = 400;
+
+const STYLES = new Set(["auto", "fill", "relief", "portrait", "anime"]);
+const QUALITIES = new Set(["fast", "high"]);
+const BACKGROUNDS = new Set(["auto", "white", "none"]);
+
+/**
+ * @param {unknown} value
+ * @param {string} name
+ * @param {number} [fallback]
+ */
+function requireFiniteNumber(value, name, fallback) {
+  if (value == null) return fallback;
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    throw new Error(`${name} must be a finite number, got ${JSON.stringify(value)}`);
+  }
+  return n;
+}
+
+/**
+ * @param {unknown} pathOrHint
+ * @param {unknown} err
+ */
+function wrapImageError(pathOrHint, err) {
+  const detail = err && typeof err === "object" && "message" in err ? String(err.message) : String(err);
+  const isBuf =
+    (typeof Buffer !== "undefined" && Buffer.isBuffer?.(pathOrHint)) ||
+    pathOrHint instanceof ArrayBuffer;
+  const where = typeof pathOrHint === "string" ? pathOrHint : isBuf ? "buffer" : "image";
+  throw new Error(
+    `anime-ascii: could not decode ${where}. Use a valid PNG/JPEG/GIF/WebP under a few hundred MB. (${detail})`,
+  );
+}
+
 /** @returns {Required<AsciiOptions>} */
 export function normalizeOptions(options = {}) {
-  const look = options.look === "dense" ? "dense" : "ascii";
+  if (options == null || typeof options !== "object") {
+    throw new Error("anime-ascii: options must be an object");
+  }
+
+  const lookRaw = options.look ?? "ascii";
+  if (!(lookRaw in LOOK_PRESETS)) {
+    throw new Error(
+      `Unknown look preset "${lookRaw}". Use "ascii" (readable glyphs) or "dense" (finer mosaic).`,
+    );
+  }
+  const look = /** @type {"ascii" | "dense"} */ (lookRaw);
   const lookDefaults = LOOK_PRESETS[look];
+
   const style = options.style ?? "auto";
+  if (!STYLES.has(style)) {
+    throw new Error(
+      `Unknown style "${style}". Use auto | fill | relief | portrait | anime.`,
+    );
+  }
   const faceStyle = style === "portrait" || style === "anime";
+
+  const quality = options.quality ?? "fast";
+  if (!QUALITIES.has(quality)) {
+    throw new Error(`Unknown quality "${quality}". Use "fast" or "high".`);
+  }
+
+  const background = options.background ?? "auto";
+  if (!BACKGROUNDS.has(background)) {
+    throw new Error(`Unknown background "${background}". Use auto | white | none.`);
+  }
 
   // LOOK_PRESETS win for contrast / edges / ramp / cellAspect.
   // Portrait/anime may raise floors and widen columns for face coverage.
@@ -83,36 +145,48 @@ export function normalizeOptions(options = {}) {
 
   const defaultColumns =
     options.columns != null
-      ? options.columns
+      ? requireFiniteNumber(options.columns, "columns")
       : faceStyle
         ? PORTRAIT_COLUMNS[look]
         : lookDefaults.columns;
 
+  if (defaultColumns < MIN_COLUMNS || defaultColumns > MAX_COLUMNS) {
+    throw new Error(
+      `columns must be ${MIN_COLUMNS}–${MAX_COLUMNS}, got ${defaultColumns}`,
+    );
+  }
+
   return {
     look,
-    columns: defaultColumns,
-    cellAspect:
+    columns: Math.round(defaultColumns),
+    cellAspect: requireFiniteNumber(
       options.cellAspect ??
-      Math.max(lookDefaults.cellAspect, portraitFloor.cellAspect || 0),
+        Math.max(lookDefaults.cellAspect, portraitFloor.cellAspect || 0),
+      "cellAspect",
+    ),
     ramp: options.ramp ?? lookDefaults.ramp ?? DEFAULT_RAMP,
     invert: Boolean(options.invert),
     autocontrast: options.autocontrast !== false,
-    brightness: options.brightness ?? 0,
-    contrast: options.contrast ?? lookDefaults.contrast,
-    gamma: options.gamma ?? 1,
-    edgeBoost:
+    brightness: requireFiniteNumber(options.brightness ?? 0, "brightness"),
+    contrast: requireFiniteNumber(options.contrast ?? lookDefaults.contrast, "contrast"),
+    gamma: requireFiniteNumber(options.gamma ?? 1, "gamma"),
+    edgeBoost: requireFiniteNumber(
       options.edgeBoost ?? Math.max(lookDefaults.edgeBoost, portraitFloor.edgeBoost),
+      "edgeBoost",
+    ),
     dither: Boolean(options.dither),
     metric: options.metric === "average" ? "average" : "lstar",
     style,
-    reliefHollow: options.reliefHollow ?? 0.95,
-    reliefEdge: options.reliefEdge ?? 0.95,
-    reliefBase: options.reliefBase ?? 0.8,
-    localContrast:
+    reliefHollow: requireFiniteNumber(options.reliefHollow ?? 0.95, "reliefHollow"),
+    reliefEdge: requireFiniteNumber(options.reliefEdge ?? 0.95, "reliefEdge"),
+    reliefBase: requireFiniteNumber(options.reliefBase ?? 0.8, "reliefBase"),
+    localContrast: requireFiniteNumber(
       options.localContrast ??
-      Math.max(lookDefaults.localContrast, portraitFloor.localContrast),
-    quality: options.quality === "high" ? "high" : "fast",
-    background: options.background ?? "auto",
+        Math.max(lookDefaults.localContrast, portraitFloor.localContrast),
+      "localContrast",
+    ),
+    quality,
+    background,
   };
 }
 
@@ -769,21 +843,41 @@ export function convertImageColored(image, options = {}) {
 }
 
 export async function convertPath(path, options = {}) {
-  const image = await Jimp.read(path);
+  let image;
+  try {
+    image = await Jimp.read(path);
+  } catch (err) {
+    wrapImageError(path, err);
+  }
   return convertImage(image, options);
 }
 
 export async function convertPathColored(path, options = {}) {
-  const image = await Jimp.read(path);
+  let image;
+  try {
+    image = await Jimp.read(path);
+  } catch (err) {
+    wrapImageError(path, err);
+  }
   return convertImageColored(image, options);
 }
 
 export async function convertBuffer(buffer, options = {}) {
-  const image = await Jimp.read(buffer);
+  let image;
+  try {
+    image = await Jimp.read(buffer);
+  } catch (err) {
+    wrapImageError(buffer, err);
+  }
   return convertImage(image, options);
 }
 
 export async function convertBufferColored(buffer, options = {}) {
-  const image = await Jimp.read(buffer);
+  let image;
+  try {
+    image = await Jimp.read(buffer);
+  } catch (err) {
+    wrapImageError(buffer, err);
+  }
   return convertImageColored(image, options);
 }

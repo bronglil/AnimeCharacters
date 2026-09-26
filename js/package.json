@@ -1,7 +1,7 @@
 {
   "name": "anime-ascii",
-  "version": "0.5.0",
-  "description": "Reusable image-to-ASCII with truecolor glyphs — readable characters, not photo mosaics",
+  "version": "0.5.1",
+  "description": "Node image-to-colored-ASCII — readable glyphs for bots, CLIs, and web previews",
   "type": "module",
   "main": "./src/index.js",
   "module": "./src/index.js",
@@ -12,7 +12,8 @@
       "import": "./src/index.js",
       "default": "./src/index.js"
     },
-    "./ascii.css": "./src/ascii.css"
+    "./ascii.css": "./src/ascii.css",
+    "./ascii.vars.css": "./src/ascii.vars.css"
   },
   "bin": {
     "anime-ascii": "./bin/anime-ascii.js"
@@ -21,23 +22,26 @@
     "src",
     "bin",
     "README.md",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "LICENSE"
   ],
   "scripts": {
     "test": "node --test test/**/*.test.js",
     "convert": "node ./bin/anime-ascii.js",
     "build:characters": "node ./scripts/build-character-designs.js",
     "gallery": "npx --yes serve .. -p 5173",
-    "prepack": "node --test test/presets.test.js"
+    "prepack": "node --test test/presets.test.js test/validation.test.js"
   },
   "keywords": [
     "ascii",
     "ascii-art",
     "image",
     "anime",
+    "discord",
+    "cli",
     "color",
     "truecolor",
-    "cli"
+    "terminal"
   ],
   "author": "sajid",
   "license": "MIT",

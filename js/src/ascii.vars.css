@@ -1,0 +1,26 @@
+/**
+ * CSS variables only — bring your own layout.
+ * Import: `import "anime-ascii/ascii.vars.css"`
+ *
+ * Override any token, then style `.ascii-color` yourself
+ * (or keep using `ascii.css` for the full preset).
+ */
+:root {
+  --ascii-font: Consolas, "Courier New", ui-monospace, monospace;
+  --ascii-size: 14px;
+  --ascii-line: 1.15;
+  --ascii-tracking: 0.04em;
+  --ascii-weight: 600;
+  --ascii-fg: #e8eef7;
+  --ascii-bg: #07090e;
+  --ascii-pad: 0.75rem 1rem;
+
+  --ascii-glyph-size: 15px;
+  --ascii-glyph-line: 1.2;
+  --ascii-glyph-tracking: 0.06em;
+
+  --ascii-dense-size: 9px;
+  --ascii-dense-line: 1.05;
+  --ascii-dense-tracking: 0;
+  --ascii-dense-weight: 500;
+}

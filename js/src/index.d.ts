@@ -24,6 +24,10 @@ export declare const PORTRAIT_COLUMNS: {
   readonly dense: number;
 };
 
+/** Inclusive column bounds enforced by `normalizeOptions`. */
+export declare const MIN_COLUMNS: number;
+export declare const MAX_COLUMNS: number;
+
 export interface AsciiOptions {
   look?: LookPreset;
   columns?: number;
@@ -59,6 +63,11 @@ export interface ColoredAscii {
   ansi: string;
   cells: AsciiCell[][];
 }
+
+/** Alias for consumers who prefer this name. */
+export type ConvertOptions = AsciiOptions;
+/** Alias for colored conversion results. */
+export type ConvertResult = ColoredAscii;
 
 export declare const RAMPS: Record<string, string>;
 export declare const DEFAULT_RAMP: string;

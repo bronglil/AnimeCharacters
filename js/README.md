@@ -1,8 +1,6 @@
 # anime-ascii
 
-Convert images to **colored ASCII art** made of readable characters — for any Node project.
-
-## Quick start
+Node **image → colored ASCII** (readable glyphs, not a photo mosaic). Anime is the demo aesthetic; the API is general.
 
 ```bash
 npm install anime-ascii
@@ -10,96 +8,114 @@ npm install anime-ascii
 
 ```js
 import { convertPathColored } from "anime-ascii";
-import "anime-ascii/ascii.css"; // separate file — never inlined into JS
+import "anime-ascii/ascii.css"; // or: import "anime-ascii/ascii.vars.css"
 
 const { html, text, ansi } = await convertPathColored("./hero.png", {
-  look: "ascii", // locked preset: 56 columns (64 for portraits)
+  look: "ascii",
 });
-// Paste `html` into a page that already imports ascii.css
 ```
 
-Without a bundler:
-
-```html
-<link rel="stylesheet" href="node_modules/anime-ascii/ascii.css" />
-```
-
-From this monorepo without npm:
+Install from this monorepo (`master`):
 
 ```bash
-npm install github:bronglil/AnimeCharacters#main:js
-# or: npm install file:../AnimeCharacters/js
+npm install github:bronglil/AnimeCharacters#master:js
 ```
 
-Docs: [Wiki](https://github.com/bronglil/AnimeCharacters/wiki)
+## Why this vs jp2a / caca / ImageMagick?
 
-## Looks (locked presets)
+- **Node-native** ESM API + TypeScript types (`ConvertOptions` / `ConvertResult`)
+- **One call →** plain text, colored HTML, ANSI truecolor
+- **Locked presets** shared by API, CLI, and gallery tests
+- **Color is first-class**, not a bolted-on flag
 
-| `look` | Columns | Contrast | Edge | Use when |
-|--------|---------|----------|------|----------|
-| `ascii` (default) | **56** (portrait **64**) | 1.15 | 0.35 | Visible colored characters, accurate coverage |
-| `dense` | **72** (portrait **80**) | 1.0 | 0.4 | Near-photo mosaic |
+Use jp2a for pure mono CLI speed. Use this inside JS bots, apps, and pipelines.
 
-Same numbers in gallery, CLI, and `normalizeOptions()` / `LOOK_PRESETS`. Override with `columns` anytime.
+## Audience examples
+
+| Use case | Hint |
+|----------|------|
+| Discord bot | [`examples/discord-bot.mjs`](examples/discord-bot.mjs) |
+| CI / logs | `convertPath` → paste `text` into the job log |
+| Web preview | `html` + `ascii.css` |
+| Portrait polish | `--style anime` (same face, cel outline — no morph) |
+
+Non-anime samples in the repo: `samples/general/{landscape,diagram,meme}.*`
+
+## Looks (locked)
+
+| `look` | Columns | When |
+|--------|---------|------|
+| `ascii` | **56** / portrait **64** | Default — readable glyphs |
+| `dense` | **72** / portrait **80** | Finer mosaic when you want detail over readability (gallery, print). Or set `columns` explicitly. |
 
 ```js
-import { LOOK_PRESETS, PORTRAIT_COLUMNS } from "anime-ascii";
-console.log(LOOK_PRESETS.ascii.columns); // 56
-console.log(PORTRAIT_COLUMNS.ascii);     // 64
+import { LOOK_PRESETS, PORTRAIT_COLUMNS, MIN_COLUMNS, MAX_COLUMNS } from "anime-ascii";
+```
+
+## Validation
+
+`normalizeOptions()` throws on bad input (unknown `look` / `style` / `quality`, `columns` outside **8–400**). Broken image paths get a clear decode error instead of a raw jimp stack.
+
+## Performance
+
+Measured locally (Node 24): sprite ≈ **50ms**, portrait ≈ **45–80ms**, heap Δ typically **&lt;10MB** per call. **Node only** (no WASM). Batch with workers. Prefer downscaling very large sources first.
+
+## CSS
+
+```js
+import "anime-ascii/ascii.css";       // full theme (imports variables)
+import "anime-ascii/ascii.vars.css";  // tokens only — style `.ascii-color` yourself
+```
+
+Override tokens:
+
+```css
+:root {
+  --ascii-bg: #0b1020;
+  --ascii-fg: #f5f7ff;
+  --ascii-size: 13px;
+}
 ```
 
 ## CLI
 
 ```bash
 npx anime-ascii --help
-npx anime-ascii photo.png --look ascii --color
-npx anime-ascii photo.png --look dense --color -o out.html
-npx anime-ascii photo.png -w 48 --color
+npx anime-ascii photo.png --look ascii --color -o out.html
+npx anime-ascii photo.png --look ascii --style anime --quality high --color
 ```
 
-## API options
+CLI ships **inside** this package (`bin/anime-ascii.js`) — same `LOOK_PRESETS` as the library and gallery.
+
+## API
 
 ```js
 await convertPathColored("sprite.png", {
   look: "ascii",
-  columns: 56,
-  style: "fill",       // auto | fill | relief | portrait
-  ramp: "classic",
+  style: "auto", // auto | fill | relief | portrait | anime
   quality: "high",
-  dither: false,
+  columns: 56,   // optional override
 });
 ```
 
-Exports: `convertPath`, `convertPathColored`, `convertImage`, `convertImageColored`, `convertBuffer`, `convertBufferColored`, `toHtml`, `toAnsi`, `toPlain`, `LOOK_PRESETS`, `RAMPS`, `normalizeOptions`.
+Exports: `convertPath`, `convertPathColored`, `convertImage`, `convertImageColored`, `convertBuffer`, `convertBufferColored`, `toHtml`, `toAnsi`, `toPlain`, `LOOK_PRESETS`, `PORTRAIT_COLUMNS`, `MIN_COLUMNS`, `MAX_COLUMNS`, `RAMPS`, `normalizeOptions`.
 
-Types: included (`src/index.d.ts`). CSS: `import "anime-ascii/ascii.css"` (external file, not inlined).
+## Troubleshooting
 
-## Anime portraits
+| Symptom | Fix |
+|---------|-----|
+| `Unknown look preset "…"` | Use `"ascii"` or `"dense"` |
+| `columns must be 8–400` | Pass a sane width |
+| `could not decode …` | Valid PNG/JPEG/GIF/WebP; check path |
+| Output looks like a photo soup | Use `look: "ascii"` (not `dense`) |
+| Face too small / ears missing | `--style portrait` or `anime`, `quality: "high"` |
 
-Same face — cel outline polish, no morphing:
-
-```bash
-npx anime-ascii photo.png --look ascii --style anime --quality high --color -o out.html
-```
-
-`--style anime` keeps your features in place, adds bold silhouette (helps ears/hair) and soft skin planes.
-
-- [`examples/basic.mjs`](examples/basic.mjs) — file → HTML
-- [`examples/react.jsx`](examples/react.jsx) — React usage sketch
-- Portrait demo (this repo): `samples/sajid/` — your photo converted with `--look ascii` / `dense` + `--style portrait`
+## Gallery (repo)
 
 ```bash
-npx anime-ascii ../samples/sajid/sajid.png --look ascii --style portrait --quality high --color -o out.html
+npm install && npm run build:characters && npm run gallery
 ```
 
-## Gallery (this repo)
+## Contributing / license
 
-```bash
-cd js && npm install && npm run build:characters
-npm run gallery
-# http://localhost:5173/gallery/
-```
-
-## License
-
-MIT
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). **MIT** — see [`LICENSE`](LICENSE).

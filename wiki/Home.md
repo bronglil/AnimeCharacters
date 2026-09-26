@@ -1,8 +1,8 @@
 # anime-ascii
 
-Reusable **image → colored ASCII** for Node. Output is made of readable characters with color — not a photo mosaic.
+Node **image → colored ASCII** for bots, CLIs, CI logs, and web previews. Anime demos are the hook — the API is general.
 
-**Package:** [`anime-ascii`](https://www.npmjs.com/package/anime-ascii) · **Repo:** [bronglil/AnimeCharacters](https://github.com/bronglil/AnimeCharacters)
+**Package:** [`anime-ascii`](https://www.npmjs.com/package/anime-ascii) · **Repo:** [bronglil/AnimeCharacters](https://github.com/bronglil/AnimeCharacters) (`master`)
 
 ## Pages
 
@@ -20,18 +20,8 @@ npm install anime-ascii
 npx anime-ascii photo.png --look ascii --color
 ```
 
-```js
-import { convertPathColored } from "anime-ascii";
-import "anime-ascii/ascii.css";
+## Positioning
 
-const { text, html, ansi } = await convertPathColored("photo.png", {
-  look: "ascii",
-  quality: "high",
-});
-```
-
-## Design goals
-
-- **Glyph-forward** — characters stay readable
-- **Locked looks** — `ascii` (56 cols) and `dense` (72 cols)
-- **Portrait / anime** — wider columns, subject-aware sampling, cel polish without morphing the face
+- First audience: **Node / terminal developers**
+- Strengths: presets, truecolor HTML+ANSI, validation, types
+- Prefer jp2a for mono C-speed CLI only

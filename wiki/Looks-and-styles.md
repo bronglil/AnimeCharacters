@@ -5,7 +5,7 @@
 | `look` | Columns | Portrait columns | Use when |
 |--------|---------|------------------|----------|
 | `ascii` (default) | **56** | **64** | Readable colored characters |
-| `dense` | **72** | **80** | Finer mosaic |
+| `dense` | **72** | **80** | Maximum detail when readability is secondary (gallery zoom, print mosaics). Prefer explicit `columns` if you only need width. |
 
 `LOOK_PRESETS` and `PORTRAIT_COLUMNS` are exported and tested so gallery, CLI, and API stay aligned.
 

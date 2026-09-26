@@ -2,6 +2,8 @@ export { RAMPS, DEFAULT_RAMP, getRamp } from "./ramps.js";
 export {
   LOOK_PRESETS,
   PORTRAIT_COLUMNS,
+  MIN_COLUMNS,
+  MAX_COLUMNS,
   convertImage,
   convertImageColored,
   convertPath,

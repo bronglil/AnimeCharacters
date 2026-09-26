@@ -1,54 +1,44 @@
 # Contributing to anime-ascii
 
-## What we follow (and what we skip)
+Solo-maintained for now. Issues/PRs welcome; replies may be slow.
 
-Valid for this package — **do these**:
+## Good PR ideas
 
-| Practice | Status |
-|----------|--------|
-| Locked `LOOK_PRESETS` shared by API / CLI / gallery | Required |
-| Separate `ascii.css` via `exports["./ascii.css"]` (no CSS-in-JS) | Required |
-| Types via `src/index.d.ts` + `exports.types` | Required |
-| Preset width / HTML-class tests | Required |
-| CLI `--help` lists look presets | Required |
-| Quick-start README before deep API | Required |
-| Document breaking changes for preset/CSS churn | Required |
+- Bug fixes **with tests**
+- Clearer errors / docs
+- Performance improvements that keep glyph mapping stable for the same inputs
+- New optional flags with backward-compatible defaults
 
-**Not valid / not done for this package** (on purpose):
+## Not needed right now
 
-| Idea | Why skip |
-|------|----------|
-| Dual `dist/index.js` + `dist/index.esm.js` CJS/ESM build | Package is **ESM-only** (`"type":"module"`, Node ≥18). Fake `dist/` without a real build adds drift. Vite/webpack already consume ESM `import`. |
-| Browser-only entry without `jimp` | Conversion needs image decode; first release stays Node. HTML/CSS output is for the browser; conversion runs on Node or a bundler that can ship jimp. |
-| Lazy-load for “&lt;50KB” | Our published tarball is ~12KB source. Weight is **dependency `jimp` (~MB)**. Shrinking that is a separate epic, not a `dist` shuffle. |
+- New output formats (keep scope focused)
+- Python / browser-WASM ports (separate projects)
+- Soft forks of `LOOK_PRESETS` numbers without a major bump
 
-## Presets are contracts
+## Single source of truth
 
-`LOOK_PRESETS` in `src/converter.js` is the single source of truth for `look: "ascii" | "dense"`.
+| Surface | Must use |
+|---------|----------|
+| JS API | `normalizeOptions()` / `LOOK_PRESETS` |
+| CLI (`bin/anime-ascii.js`) | same |
+| Gallery (`npm run build:characters`) | same |
+| Tests | lock widths + smoke golden masters |
 
-- Gallery (`npm run build:characters`), CLI (`--look`), and the JS API must all use `normalizeOptions()` / `LOOK_PRESETS`.
-- `style: "portrait"` may **raise** edge/localContrast floors; it must **never lower** look preset values.
-- Changing preset numbers (columns, contrast, edgeBoost, ramp) is a **breaking change**. Bump the **major** version and regenerate gallery samples.
-- Renaming CSS classes (`ascii-color`, `ascii-color--glyph`, `ascii-color--dense`) is also **breaking**.
+Changing preset columns / contrast / CSS class names is a **breaking** (major) change.
 
-## Non-breaking changes
-
-- New optional API flags with defaults that preserve current look
-- New ramp names
-- Docs / examples / tests
-- Patch/minor performance improvements that keep column counts and glyph mapping identical for the same inputs
-
-## Checks before a PR
+## Checks
 
 ```bash
 cd js
 npm test
-npm run build:characters   # if presets or converter sampling changed
+npm run build:characters   # if sampling / presets changed
 node bin/anime-ascii.js --help
 ```
 
-## Package layout
+## Package notes
 
-- JS entry: `src/index.js` (ESM)
-- Types: `src/index.d.ts`
-- CSS: `src/ascii.css` — shipped separately via `exports["./ascii.css"]`, never inlined into JS
+- ESM-only, Node ≥ 18 — no fake dual CJS/ESM `dist/`
+- Types: `src/index.d.ts` (`ConvertOptions` / `ConvertResult` aliases)
+- CSS: `ascii.css` + `ascii.vars.css` via `exports` (never inlined into JS)
+- Default git branch: **`master`**
+- Commits: author **sajid** only (no Cursor co-author trailers)

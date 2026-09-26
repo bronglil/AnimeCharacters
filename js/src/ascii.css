@@ -1,31 +1,34 @@
 /**
  * Glyph-forward styles for anime-ascii colored HTML.
  * Import: `import "anime-ascii/ascii.css"`
+ * Variables-only: `import "anime-ascii/ascii.vars.css"`
  */
+@import "./ascii.vars.css";
+
 .ascii-color {
-  font-family: Consolas, "Courier New", ui-monospace, monospace;
-  font-size: 14px;
-  line-height: 1.15;
-  letter-spacing: 0.04em;
-  font-weight: 600;
+  font-family: var(--ascii-font);
+  font-size: var(--ascii-size);
+  line-height: var(--ascii-line);
+  letter-spacing: var(--ascii-tracking);
+  font-weight: var(--ascii-weight);
   white-space: pre;
-  color: #e8eef7;
-  background: #07090e;
-  padding: 0.75rem 1rem;
+  color: var(--ascii-fg);
+  background: var(--ascii-bg);
+  padding: var(--ascii-pad);
   overflow: auto;
 }
 
 .ascii-color.ascii-color--glyph {
-  font-size: 15px;
-  line-height: 1.2;
-  letter-spacing: 0.06em;
+  font-size: var(--ascii-glyph-size);
+  line-height: var(--ascii-glyph-line);
+  letter-spacing: var(--ascii-glyph-tracking);
 }
 
 .ascii-color.ascii-color--dense {
-  font-size: 9px;
-  line-height: 1.05;
-  letter-spacing: 0;
-  font-weight: 500;
+  font-size: var(--ascii-dense-size);
+  line-height: var(--ascii-dense-line);
+  letter-spacing: var(--ascii-dense-tracking);
+  font-weight: var(--ascii-dense-weight);
 }
 
 .ascii-color div {
