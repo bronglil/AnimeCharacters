@@ -6,8 +6,10 @@ import { join } from "node:path";
 import { Jimp } from "jimp";
 import {
   convertImage,
+  convertImageColored,
   convertPath,
   getRamp,
+  normalizeOptions,
   RAMPS,
   srgb8ToLstar,
 } from "../src/index.js";
@@ -20,6 +22,30 @@ function meanDensity(art, ramp) {
     chars.length
   );
 }
+
+describe("look presets", () => {
+  it("defaults to ascii glyph look", () => {
+    const opts = normalizeOptions({});
+    assert.equal(opts.look, "ascii");
+    assert.equal(opts.columns, 56);
+    assert.equal(opts.ramp, " .:-=+*#%@");
+  });
+
+  it("dense look widens columns", () => {
+    assert.equal(normalizeOptions({ look: "dense" }).columns, 72);
+  });
+
+  it("explicit columns override look", () => {
+    assert.equal(normalizeOptions({ look: "ascii", columns: 72 }).columns, 72);
+  });
+
+  it("colored HTML uses glyph class by default", () => {
+    const img = new Jimp({ width: 64, height: 64, color: 0xffcc00ff });
+    const out = convertImageColored(img, { look: "ascii", style: "fill", columns: 20 });
+    assert.ok(out.html.includes("ascii-color--glyph"));
+    assert.equal(out.text.split("\n")[0].length, 20);
+  });
+});
 
 describe("ramps", () => {
   it("orders standard light to dark like image-to-ascii", () => {

@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { convertPath, convertPathColored } from "../src/index.js";
+import { convertPath, convertPathColored, normalizeOptions } from "../src/index.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const charDir = join(root, "samples", "characters");
@@ -15,46 +15,46 @@ const catalogPath = join(charDir, "catalog.json");
 
 const DESIGN_OPTS = {
   "classic-clean": {
-    columns: 64,
+    look: "ascii",
     style: "fill",
-    ramp: "classic",
     quality: "high",
-    cellAspect: 0.48,
-    localContrast: 0.28,
-    edgeBoost: 0.1,
-    contrast: 1.12,
   },
-  "classic-dense": {
-    columns: 64,
+  "classic-bold": {
+    look: "ascii",
     style: "fill",
-    ramp: "classic",
     quality: "high",
-    cellAspect: 0.48,
-    localContrast: 0.4,
-    edgeBoost: 0.18,
-    contrast: 1.2,
+    localContrast: 0.48,
+    contrast: 1.28,
   },
   "standard-soft": {
-    columns: 64,
+    look: "ascii",
     style: "fill",
+    quality: "high",
     ramp: "standard",
-    quality: "high",
-    cellAspect: 0.5,
-    localContrast: 0.25,
-    edgeBoost: 0.08,
-    contrast: 1.05,
+    localContrast: 0.32,
+    contrast: 1.1,
+    edgeBoost: 0.35,
   },
-  "dither-detail": {
-    columns: 72,
+  "dense-mosaic": {
+    look: "dense",
     style: "fill",
-    ramp: "classic",
     quality: "high",
-    cellAspect: 0.5,
-    localContrast: 0.3,
-    edgeBoost: 0.1,
-    dither: true,
   },
 };
+
+describe("look presets", () => {
+  it("defaults to ascii look (~56 columns)", () => {
+    const opts = normalizeOptions({});
+    assert.equal(opts.look, "ascii");
+    assert.equal(opts.columns, 56);
+  });
+
+  it("dense look uses ~72 columns", () => {
+    const opts = normalizeOptions({ look: "dense" });
+    assert.equal(opts.look, "dense");
+    assert.equal(opts.columns, 72);
+  });
+});
 
 describe("character design cards", () => {
   it("has catalog with 10 characters and 4 designs", () => {
@@ -82,12 +82,12 @@ describe("character design cards", () => {
     for (const file of pngs) {
       const art = await convertPath(join(charDir, file), DESIGN_OPTS["classic-clean"]);
       const lines = art.split("\n");
-      assert.ok(lines.length >= 20, `${file} too short`);
-      assert.equal(lines[0].length, 64, `${file} width`);
+      assert.ok(lines.length >= 12, `${file} too short`);
+      assert.equal(lines[0].length, 56, `${file} width`);
       const spaces = (art.match(/ /g) || []).length;
       const ink = art.replace(/\s/g, "").length;
-      assert.ok(spaces > 150, `${file} needs empty background space`);
-      assert.ok(ink > 150, `${file} needs character ink`);
+      assert.ok(spaces > 80, `${file} needs empty background space`);
+      assert.ok(ink > 80, `${file} needs character ink`);
       const unique = new Set(art.replace(/\n/g, "")).size;
       assert.ok(unique >= 5, `${file} too few glyphs (${unique})`);
       const ch = catalog.characters.find((c) => c.image === file);
@@ -104,15 +104,16 @@ describe("character design cards", () => {
     assert.ok(existsSync(pikachu));
     for (const [id, opts] of Object.entries(DESIGN_OPTS)) {
       const art = await convertPath(pikachu, opts);
-      assert.ok(art.split("\n").length >= 20, id);
-      assert.ok((art.match(/ /g) || []).length > 100, `${id} background`);
+      assert.ok(art.split("\n").length >= 12, id);
+      assert.ok((art.match(/ /g) || []).length > 60, `${id} background`);
     }
   });
 
-  it("emits colored HTML for pikachu", async () => {
+  it("emits glyph-forward colored HTML for pikachu", async () => {
     const rich = await convertPathColored(join(charDir, "025_pikachu.png"), DESIGN_OPTS["classic-clean"]);
     assert.ok(rich.html.includes("rgb("));
     assert.ok(rich.html.includes("ascii-color"));
+    assert.ok(rich.html.includes("ascii-color--glyph"));
     assert.equal(rich.text.split("\n")[0].length, rich.cells[0].length);
   });
 });

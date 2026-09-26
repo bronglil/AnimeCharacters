@@ -4,12 +4,23 @@
  * @typedef {{ char: string, r: number, g: number, b: number }} AsciiCell
  */
 
+/**
+ * @typedef {Object} HtmlEmitOptions
+ * @property {boolean} [monoSpaces=true]
+ * @property {"glyph"|"dense"} [variant="glyph"]
+ */
+
 function clampByte(n) {
   return Math.max(0, Math.min(255, Math.round(n)));
 }
 
-/** @param {AsciiCell[][]} rows */
-export function toHtml(rows, { monoSpaces = true } = {}) {
+/**
+ * @param {AsciiCell[][]} rows
+ * @param {HtmlEmitOptions} [options]
+ */
+export function toHtml(rows, { monoSpaces = true, variant = "glyph" } = {}) {
+  const variantClass =
+    variant === "dense" ? "ascii-color ascii-color--dense" : "ascii-color ascii-color--glyph";
   const lines = rows.map((row) =>
     row
       .map(({ char, r, g, b }) => {
@@ -21,7 +32,7 @@ export function toHtml(rows, { monoSpaces = true } = {}) {
       })
       .join(""),
   );
-  return `<div class="ascii-color">${lines.map((l) => `<div>${l}</div>`).join("")}</div>`;
+  return `<div class="${variantClass}">${lines.map((l) => `<div>${l}</div>`).join("")}</div>`;
 }
 
 /** @param {AsciiCell[][]} rows */

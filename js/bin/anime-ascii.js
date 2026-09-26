@@ -1,29 +1,42 @@
 #!/usr/bin/env node
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { convertPath, convertPathColored, RAMPS } from "../src/index.js";
+import { convertPath, convertPathColored, RAMPS, LOOK_PRESETS, PORTRAIT_COLUMNS } from "../src/index.js";
 
 function printHelp() {
   console.log(`Usage: anime-ascii <image> [options]
 
+Looks (presets — gallery / CLI / API share the same numbers):
+  --look ascii            Readable glyphs · ${LOOK_PRESETS.ascii.columns} columns (default)
+                          · portrait → ${PORTRAIT_COLUMNS.ascii} cols for face coverage
+  --look dense            Near-photo mosaic · ${LOOK_PRESETS.dense.columns} columns
+                          · portrait → ${PORTRAIT_COLUMNS.dense} cols
+
 Options:
-  -o, --output <file>     Write text to file
-  -w, --columns <n>       Width in characters (default 80)
-  -r, --ramp <name|chars> Ramp name or custom string (default classic)
-      --cell-aspect <f>   Character width/height (default 0.5)
+  -o, --output <file>     Write output (.html → colored HTML, else text/ANSI)
+  -w, --columns <n>       Override preset column width
+  -r, --ramp <name|chars> Ramp name or custom string
+      --cell-aspect <f>   Character cell aspect ratio
       --invert            Invert luminance mapping
       --no-autocontrast   Disable percentile stretch
       --brightness <f>    Brightness offset
       --contrast <f>      Contrast multiplier
       --gamma <f>         Gamma
-      --edge-boost <f>    Edge emphasis 0..1 (fill style)
-      --style <mode>      auto | fill | relief | portrait
+      --edge-boost <f>    Edge emphasis 0..1
+      --style <mode>      auto | fill | relief | portrait | anime
+                          anime = your face + cel outline polish (no morph)
       --metric <name>     lstar | average
       --quality <mode>    fast (default) | high
-      --color             Print ANSI truecolor ASCII
+      --color             Emit ANSI truecolor (or HTML if -o *.html)
       --dither            Floyd-Steinberg dither
       --list-ramps        Print built-in ramps
   -h, --help              Show help
+
+Examples:
+  anime-ascii photo.png --look ascii --style anime --color
+  anime-ascii photo.png --look ascii --style portrait --color
+  anime-ascii sprite.png --look dense --color -o out.html
+  anime-ascii photo.png -w 48 --color
 `);
 }
 
@@ -31,15 +44,16 @@ function parseArgs(argv) {
   const args = {
     image: null,
     output: null,
-    columns: 80,
-    ramp: "classic",
-    cellAspect: 0.5,
+    columns: null,
+    look: "ascii",
+    ramp: null,
+    cellAspect: null,
     invert: false,
     autocontrast: true,
-    brightness: 0,
-    contrast: 1,
-    gamma: 1,
-    edgeBoost: 0,
+    brightness: null,
+    contrast: null,
+    gamma: null,
+    edgeBoost: null,
     dither: false,
     style: "auto",
     metric: "lstar",
@@ -67,6 +81,9 @@ function parseArgs(argv) {
       case "-w":
       case "--columns":
         args.columns = Number(next());
+        break;
+      case "--look":
+        args.look = next();
         break;
       case "-r":
       case "--ramp":
@@ -118,6 +135,26 @@ function parseArgs(argv) {
   return args;
 }
 
+function buildOpts(args) {
+  const opts = {
+    look: args.look === "dense" ? "dense" : "ascii",
+    invert: args.invert,
+    autocontrast: args.autocontrast,
+    dither: args.dither,
+    style: args.style,
+    metric: args.metric,
+    quality: args.quality,
+  };
+  if (args.columns != null) opts.columns = args.columns;
+  if (args.ramp != null) opts.ramp = args.ramp;
+  if (args.cellAspect != null) opts.cellAspect = args.cellAspect;
+  if (args.brightness != null) opts.brightness = args.brightness;
+  if (args.contrast != null) opts.contrast = args.contrast;
+  if (args.gamma != null) opts.gamma = args.gamma;
+  if (args.edgeBoost != null) opts.edgeBoost = args.edgeBoost;
+  return opts;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
@@ -135,21 +172,7 @@ async function main() {
     return 1;
   }
 
-  const opts = {
-    columns: args.columns,
-    cellAspect: args.cellAspect,
-    ramp: args.ramp,
-    invert: args.invert,
-    autocontrast: args.autocontrast,
-    brightness: args.brightness,
-    contrast: args.contrast,
-    gamma: args.gamma,
-    edgeBoost: args.edgeBoost,
-    dither: args.dither,
-    style: args.style,
-    metric: args.metric,
-    quality: args.quality,
-  };
+  const opts = buildOpts(args);
 
   if (args.color) {
     const rich = await convertPathColored(resolve(args.image), opts);

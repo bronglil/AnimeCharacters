@@ -1,11 +1,18 @@
 {
   "name": "anime-ascii",
-  "version": "0.4.0",
-  "description": "Image-to-ASCII with optional truecolor HTML/ANSI for anime-style sprites",
+  "version": "0.5.0",
+  "description": "Reusable image-to-ASCII with truecolor glyphs — readable characters, not photo mosaics",
   "type": "module",
   "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./ascii.css": "./src/ascii.css"
   },
   "bin": {
     "anime-ascii": "./bin/anime-ascii.js"
@@ -13,20 +20,23 @@
   "files": [
     "src",
     "bin",
-    "README.md"
+    "README.md",
+    "CONTRIBUTING.md"
   ],
   "scripts": {
     "test": "node --test test/**/*.test.js",
     "convert": "node ./bin/anime-ascii.js",
     "build:characters": "node ./scripts/build-character-designs.js",
-    "gallery": "npx --yes serve .. -p 5173"
+    "gallery": "npx --yes serve .. -p 5173",
+    "prepack": "node --test test/presets.test.js"
   },
   "keywords": [
     "ascii",
     "ascii-art",
     "image",
     "anime",
-    "silhouette",
+    "color",
+    "truecolor",
     "cli"
   ],
   "author": "sajid",
@@ -41,5 +51,12 @@
     "type": "git",
     "url": "https://github.com/bronglil/AnimeCharacters.git",
     "directory": "js"
+  },
+  "homepage": "https://github.com/bronglil/AnimeCharacters/wiki",
+  "bugs": {
+    "url": "https://github.com/bronglil/AnimeCharacters/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

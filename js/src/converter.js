@@ -10,55 +10,107 @@ import { toAnsi, toHtml, toPlain } from "./color_emit.js";
 
 /**
  * @typedef {Object} AsciiOptions
- * @property {number} [columns=80]
- * @property {number} [cellAspect=0.5]
+ * @property {"ascii"|"dense"} [look="ascii"]
+ *   ascii = readable glyphs (~56 cols; portraits use 64); dense = ~72 cols (portraits 80)
+ * @property {number} [columns]
+ * @property {number} [cellAspect]
  * @property {string} [ramp]
  * @property {boolean} [invert=false]
  * @property {boolean} [autocontrast=true]
  * @property {number} [brightness=0]
- * @property {number} [contrast=1]
+ * @property {number} [contrast]
  * @property {number} [gamma=1]
- * @property {number} [edgeBoost=0]
+ * @property {number} [edgeBoost]
  * @property {boolean} [dither=false]
  * @property {"lstar"|"average"} [metric="lstar"]
- * @property {"fill"|"relief"|"auto"|"portrait"} [style="auto"]
- * @property {number} [reliefHollow=0.95]
+ * @property {"fill"|"relief"|"auto"|"portrait"|"anime"} [style="auto"]
+ *   anime = same face layout as portrait, with cel-outline polish (no face morph) * @property {number} [reliefHollow=0.95]
  * @property {number} [reliefEdge=0.95]
  * @property {number} [reliefBase=0.8]
- * @property {number} [localContrast=0.45]
+ * @property {number} [localContrast]
  * @property {"fast"|"high"} [quality="fast"]
- */
-
-/**
  * @property {"auto"|"white"|"none"} [background="auto"]
  *   auto = flatten transparent / edge-connected near-black to white (sprites)
  */
 
+/**
+ * Locked look presets — gallery, CLI, and API all share these numbers.
+ * Ramp strings are light → dark (space = empty, @ = densest ink).
+ * ascii uses enough columns that portraits keep facial structure, still glyph-readable.
+ * @type {Readonly<{ ascii: Readonly<Object>, dense: Readonly<Object> }>}
+ */
+export const LOOK_PRESETS = Object.freeze({
+  ascii: Object.freeze({
+    columns: 56,
+    contrast: 1.15,
+    edgeBoost: 0.35,
+    localContrast: 0.45,
+    cellAspect: 0.55,
+    ramp: " .:-=+*#%@",
+  }),
+  dense: Object.freeze({
+    columns: 72,
+    contrast: 1.0,
+    edgeBoost: 0.4,
+    localContrast: 0.35,
+    cellAspect: 0.5,
+    ramp: " .:-=+*#%@",
+  }),
+});
+
+/** Extra width when converting photos so faces aren't crushed into few lines. */
+export const PORTRAIT_COLUMNS = Object.freeze({
+  ascii: 64,
+  dense: 80,
+});
+
 /** @returns {Required<AsciiOptions>} */
 export function normalizeOptions(options = {}) {
+  const look = options.look === "dense" ? "dense" : "ascii";
+  const lookDefaults = LOOK_PRESETS[look];
   const style = options.style ?? "auto";
-  const portraitDefaults =
-    style === "portrait"
-      ? { ramp: "classic", localContrast: 0.55, edgeBoost: 0.22, cellAspect: 0.48, contrast: 1.15 }
-      : {};
+  const faceStyle = style === "portrait" || style === "anime";
+
+  // LOOK_PRESETS win for contrast / edges / ramp / cellAspect.
+  // Portrait/anime may raise floors and widen columns for face coverage.
+  const portraitFloor = faceStyle
+    ? {
+        localContrast: style === "anime" ? 0.55 : 0.5,
+        edgeBoost: style === "anime" ? 0.42 : 0.28,
+        cellAspect: 0.55,
+      }
+    : { localContrast: 0, edgeBoost: 0, cellAspect: 0 };
+
+  const defaultColumns =
+    options.columns != null
+      ? options.columns
+      : faceStyle
+        ? PORTRAIT_COLUMNS[look]
+        : lookDefaults.columns;
 
   return {
-    columns: options.columns ?? 80,
-    cellAspect: options.cellAspect ?? portraitDefaults.cellAspect ?? 0.5,
-    ramp: options.ramp ?? portraitDefaults.ramp ?? DEFAULT_RAMP,
+    look,
+    columns: defaultColumns,
+    cellAspect:
+      options.cellAspect ??
+      Math.max(lookDefaults.cellAspect, portraitFloor.cellAspect || 0),
+    ramp: options.ramp ?? lookDefaults.ramp ?? DEFAULT_RAMP,
     invert: Boolean(options.invert),
     autocontrast: options.autocontrast !== false,
     brightness: options.brightness ?? 0,
-    contrast: options.contrast ?? portraitDefaults.contrast ?? 1,
+    contrast: options.contrast ?? lookDefaults.contrast,
     gamma: options.gamma ?? 1,
-    edgeBoost: options.edgeBoost ?? portraitDefaults.edgeBoost ?? 0,
+    edgeBoost:
+      options.edgeBoost ?? Math.max(lookDefaults.edgeBoost, portraitFloor.edgeBoost),
     dither: Boolean(options.dither),
     metric: options.metric === "average" ? "average" : "lstar",
     style,
     reliefHollow: options.reliefHollow ?? 0.95,
     reliefEdge: options.reliefEdge ?? 0.95,
     reliefBase: options.reliefBase ?? 0.8,
-    localContrast: options.localContrast ?? portraitDefaults.localContrast ?? 0.45,
+    localContrast:
+      options.localContrast ??
+      Math.max(lookDefaults.localContrast, portraitFloor.localContrast),
     quality: options.quality === "high" ? "high" : "fast",
     background: options.background ?? "auto",
   };
@@ -100,13 +152,25 @@ function prepareForSampling(image, columns, cellAspect, quality) {
   return { image: resized, cols, rows };
 }
 
-/** Area-average luma (+ optional RGB) for each ASCII cell. */
-function sampleGrids(image, cols, rows, metric, withColor) {
+/** Area-average luma (+ optional RGB) for each ASCII cell.
+ * @param {boolean} [preferSubject=false]
+ *   When true, ignore pure background pixels inside a cell if any subject
+ *   pixels exist — keeps thin features (ears, hair wisps) from washing out.
+ */
+function sampleGrids(image, cols, rows, metric, withColor, preferSubject = false) {
   const srcW = image.bitmap.width;
   const srcH = image.bitmap.height;
   const { data } = image.bitmap;
   const lumaGrid = [];
   const colorGrid = withColor ? [] : null;
+
+  const isBgPx = (r, g, b, a) => {
+    if (a < 8) return true;
+    // Studio white / letterboxed black — not part of the subject
+    if (r > 248 && g > 248 && b > 248) return true;
+    if (r < 8 && g < 8 && b < 8) return true;
+    return false;
+  };
 
   for (let cy = 0; cy < rows; cy++) {
     const y0 = Math.floor((cy * srcH) / rows);
@@ -116,12 +180,21 @@ function sampleGrids(image, cols, rows, metric, withColor) {
     for (let cx = 0; cx < cols; cx++) {
       const x0 = Math.floor((cx * srcW) / cols);
       const x1 = Math.max(Math.floor(((cx + 1) * srcW) / cols), x0 + 1);
+
       let sumLin = 0;
       let sumAvg = 0;
       let sumR = 0;
       let sumG = 0;
       let sumB = 0;
       let n = 0;
+
+      let sumLinSub = 0;
+      let sumAvgSub = 0;
+      let sumRSub = 0;
+      let sumGSub = 0;
+      let sumBSub = 0;
+      let nSub = 0;
+
       for (let y = y0; y < y1; y++) {
         for (let x = x0; x < x1; x++) {
           const i = (srcW * y + x) << 2;
@@ -133,48 +206,60 @@ function sampleGrids(image, cols, rows, metric, withColor) {
           const cr = r * alpha + 255 * (1 - alpha);
           const cg = g * alpha + 255 * (1 - alpha);
           const cb = b * alpha + 255 * (1 - alpha);
+          const bg = isBgPx(cr, cg, cb, a);
+
+          const addLin =
+            metric === "average"
+              ? null
+              : 0.2126 * srgbToLinear(cr / 255) +
+                0.7152 * srgbToLinear(cg / 255) +
+                0.0722 * srgbToLinear(cb / 255);
+          const addAvg = ((cr + cg + cb) * alpha) / (255 * 3);
+
           if (withColor) {
             sumR += cr;
             sumG += cg;
             sumB += cb;
           }
-          if (metric === "average") {
-            sumAvg += ((cr + cg + cb) * alpha) / (255 * 3);
-          } else {
-            sumLin +=
-              0.2126 * srgbToLinear(cr / 255) +
-              0.7152 * srgbToLinear(cg / 255) +
-              0.0722 * srgbToLinear(cb / 255);
-          }
+          if (metric === "average") sumAvg += addAvg;
+          else sumLin += addLin;
           n++;
+
+          if (!bg) {
+            if (withColor) {
+              sumRSub += cr;
+              sumGSub += cg;
+              sumBSub += cb;
+            }
+            if (metric === "average") sumAvgSub += addAvg;
+            else sumLinSub += addLin;
+            nSub++;
+          }
         }
       }
-      if (!n) {
-        lumaRow.push(0.5);
-        if (withColor) colorRow.push({ r: 128, g: 128, b: 128 });
+
+      const useSub = preferSubject && nSub > 0;
+      const nn = useSub ? nSub : n;
+      const sLin = useSub ? sumLinSub : sumLin;
+      const sAvg = useSub ? sumAvgSub : sumAvg;
+      const sR = useSub ? sumRSub : sumR;
+      const sG = useSub ? sumGSub : sumG;
+      const sB = useSub ? sumBSub : sumB;
+
+      if (!nn) {
+        lumaRow.push(1); // empty / background → light
+        if (withColor) colorRow.push({ r: 255, g: 255, b: 255 });
       } else if (metric === "average") {
-        lumaRow.push(sumAvg / n);
-        if (withColor) {
-          colorRow.push({
-            r: sumR / n,
-            g: sumG / n,
-            b: sumB / n,
-          });
-        }
+        lumaRow.push(sAvg / nn);
+        if (withColor) colorRow.push({ r: sR / nn, g: sG / nn, b: sB / nn });
       } else {
-        const y = sumLin / n;
+        const yLin = sLin / nn;
         const f =
-          y <= (6 / 29) ** 3
-            ? (y * (29 / 6) ** 2) / 3 + 4 / 29
-            : y ** (1 / 3);
+          yLin <= (6 / 29) ** 3
+            ? (yLin * (29 / 6) ** 2) / 3 + 4 / 29
+            : yLin ** (1 / 3);
         lumaRow.push((116 * f - 16) / 100);
-        if (withColor) {
-          colorRow.push({
-            r: sumR / n,
-            g: sumG / n,
-            b: sumB / n,
-          });
-        }
+        if (withColor) colorRow.push({ r: sR / nn, g: sG / nn, b: sB / nn });
       }
     }
     lumaGrid.push(lumaRow);
@@ -378,6 +463,96 @@ function applyPortraitEdges(grid, boost) {
   );
 }
 
+/**
+ * Anime cel polish — keeps the same face layout, adds bold outline + soft skin planes.
+ * Does not warp geometry or relocate features.
+ */
+function applyAnimeTouch(grid) {
+  const h = grid.length;
+  const w = grid[0]?.length ?? 0;
+  if (!h || !w) return grid;
+
+  const edges = edgeGridFromLuma(grid);
+  // Subject ≈ not near-white (after sampling, bg is ~1.0)
+  const subject = grid.map((row) => row.map((v) => v < 0.92));
+
+  // Outer silhouette ring (includes ears once subject-aware sampling kept them)
+  const outline = Array.from({ length: h }, () => Array(w).fill(false));
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!subject[y][x]) continue;
+      let border = false;
+      for (let dy = -1; dy <= 1 && !border; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const yy = y + dy;
+          const xx = x + dx;
+          if (yy < 0 || xx < 0 || yy >= h || xx >= w || !subject[yy][xx]) {
+            border = true;
+            break;
+          }
+        }
+      }
+      outline[y][x] = border;
+    }
+  }
+
+  // Reinforce left/right extrema in the head band so ear tips survive
+  const y0 = Math.floor(h * 0.22);
+  const y1 = Math.floor(h * 0.55);
+  for (let y = y0; y < y1; y++) {
+    let left = -1;
+    let right = -1;
+    for (let x = 0; x < w; x++) {
+      if (subject[y][x]) {
+        if (left < 0) left = x;
+        right = x;
+      }
+    }
+    if (left >= 0) {
+      outline[y][left] = true;
+      if (left + 1 < w && subject[y][left + 1]) outline[y][left + 1] = true;
+    }
+    if (right >= 0) {
+      outline[y][right] = true;
+      if (right - 1 >= 0 && subject[y][right - 1]) outline[y][right - 1] = true;
+    }
+  }
+
+  const out = grid.map((row) => row.slice());
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!subject[y][x]) {
+        out[y][x] = 1;
+        continue;
+      }
+      let v = grid[y][x];
+      const e = edges[y][x];
+
+      // Soft cel bands on skin midtones (keeps identity, cleaner anime planes)
+      if (v > 0.35 && v < 0.88) {
+        const bands = 5;
+        const t = (v - 0.35) / (0.88 - 0.35);
+        const q = Math.round(t * (bands - 1)) / (bands - 1);
+        v = 0.35 + q * (0.88 - 0.35);
+        v = grid[y][x] * 0.45 + v * 0.55;
+      }
+
+      // Ink-line silhouette (ears / hair / jaw)
+      if (outline[y][x]) {
+        v = Math.min(v, 0.18);
+      } else if (e > 0.35) {
+        v = clamp01(v * (1 - 0.45 * e));
+      } else if (v > 0.55 && v < 0.85) {
+        v = clamp01(v + 0.04);
+      }
+
+      out[y][x] = clamp01(v);
+    }
+  }
+  return out;
+}
+
 function isNearlyBinary(grid) {
   const flat = grid.flat();
   let lo = 0;
@@ -502,31 +677,43 @@ function convertImageCore(image, options = {}) {
 
   const flatImg = flattenBackground(image, opts.background);
   const prepared = prepareForSampling(flatImg, opts.columns, opts.cellAspect, opts.quality);
+  const useAnime = opts.style === "anime";
+  const useReliefEarly = opts.style === "relief";
+  // Prefer subject pixels so thin features (ears) aren't averaged into the background
+  const preferSubject =
+    useAnime || opts.style === "portrait" || opts.style === "auto" || opts.style === "fill";
+
   const { lumaGrid, colorGrid } = sampleGrids(
     prepared.image,
     prepared.cols,
     prepared.rows,
     opts.metric,
     true,
+    preferSubject && !useReliefEarly,
   );
   let grid = lumaGrid;
 
   const useRelief =
     opts.style === "relief" || (opts.style === "auto" && isNearlyBinary(grid));
-  const usePortrait = opts.style === "portrait" || (opts.style === "auto" && !useRelief);
+  const portraitLike =
+    useAnime || opts.style === "portrait" || (opts.style === "auto" && !useRelief);
 
   if (useRelief) {
     grid = applyRelief(grid, opts);
   } else {
-    const contrastAmt = usePortrait ? Math.max(opts.localContrast, 0.45) : opts.localContrast;
+    const contrastAmt = portraitLike ? Math.max(opts.localContrast, 0.45) : opts.localContrast;
     if (contrastAmt > 0) grid = applyLocalContrast(grid, contrastAmt);
-    const edgeAmt = usePortrait ? Math.max(opts.edgeBoost, 0.18) : opts.edgeBoost;
+    const edgeAmt = portraitLike ? Math.max(opts.edgeBoost, 0.18) : opts.edgeBoost;
     if (edgeAmt > 0) grid = applyPortraitEdges(grid, edgeAmt);
+    if (useAnime) grid = applyAnimeTouch(grid);
   }
 
   const flat = grid.flat();
   const adjustOpts = useRelief ? { ...opts, autocontrast: false, contrast: 1 } : opts;
-  const adjusted = adjust(flat, adjustOpts);
+  // Anime: gentler autocontrast so skin planes / ears stay
+  const finalAdjust =
+    useAnime ? { ...adjustOpts, contrast: Math.min(adjustOpts.contrast, 1.12) } : adjustOpts;
+  const adjusted = adjust(flat, finalAdjust);
   const h = grid.length;
   const w = grid[0]?.length ?? 0;
   let rebuilt = [];
@@ -541,13 +728,23 @@ function convertImageCore(image, options = {}) {
       if (char === " " || (rgb.r > 246 && rgb.g > 246 && rgb.b > 246)) {
         return { char: " ", r: 20, g: 22, b: 28 };
       }
+      // Anime: slight chroma pop on mid skin (not face morph — color only)
+      if (useAnime && char !== " " && rgb.r > 140 && rgb.g > 100 && rgb.b > 80 && rgb.r > rgb.b) {
+        const pop = 1.06;
+        return {
+          char,
+          r: Math.min(255, rgb.r * pop),
+          g: Math.min(255, rgb.g * pop * 0.98),
+          b: Math.min(255, rgb.b * 0.96),
+        };
+      }
       return { char, r: rgb.r, g: rgb.g, b: rgb.b };
     }),
   );
 
   return {
     text: toPlain(cells),
-    html: toHtml(cells),
+    html: toHtml(cells, { variant: opts.look === "dense" ? "dense" : "glyph" }),
     ansi: toAnsi(cells),
     cells,
   };

@@ -139,15 +139,30 @@ h2 {
     0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
-.card img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-  background:
-    radial-gradient(circle at 50% 40%, #1c2433, #0a0d14 70%);
+.char-thumb {
+  height: 140px;
+  overflow: hidden;
   border-radius: 14px;
-  display: block;
+  background: #07090e;
+  padding: 0.4rem;
   border: 1px solid rgba(255,255,255,0.04);
+}
+
+.char-thumb .ascii-color {
+  transform: scale(0.55);
+  transform-origin: top left;
+  width: 185%;
+  padding: 0;
+  background: transparent;
+}
+
+.char-thumb .thumb-fallback {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 7px;
+  line-height: 1.1;
+  white-space: pre;
+  color: var(--muted);
 }
 
 .card .title {
@@ -186,9 +201,16 @@ h2 {
 }
 
 .design-card .swatch .ascii-color {
-  transform: scale(0.42);
+  transform: scale(0.55);
   transform-origin: top left;
-  width: 240%;
+  width: 185%;
+  padding: 0;
+  background: transparent;
+}
+
+.design-card .swatch-dense .ascii-color {
+  transform: scale(0.38);
+  width: 265%;
 }
 
 .preview-block { padding-bottom: 3.5rem; }
@@ -241,20 +263,38 @@ h2 {
 
 .ascii-color {
   font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.15;
+  letter-spacing: 0.05em;
+  white-space: pre;
+  font-weight: 600;
+}
+
+.ascii-color.ascii-color--glyph {
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+}
+
+.ascii-color.ascii-color--dense {
   font-size: 9px;
   line-height: 1.05;
-  white-space: pre;
+  letter-spacing: 0;
+  font-weight: 500;
 }
 
 .ascii-color div { white-space: pre; }
 .ascii-color .bg { color: transparent; }
 
-.ascii-color span {
-  font-weight: 600;
+.ascii-frame > .ascii-color {
+  padding: 0.25rem;
+  background: transparent;
 }
 
 @media (max-width: 700px) {
   .top { flex-direction: column; align-items: stretch; }
-  .ascii-color { font-size: 6.5px; }
-  .design-card .swatch .ascii-color { transform: scale(0.34); width: 300%; }
+  .ascii-color.ascii-color--glyph { font-size: 11px; }
+  .ascii-color.ascii-color--dense { font-size: 6.5px; }
+  .design-card .swatch .ascii-color { transform: scale(0.42); width: 240%; }
+  .char-thumb .ascii-color { transform: scale(0.42); width: 240%; }
 }

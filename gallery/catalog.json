@@ -1,25 +1,43 @@
 {
-  "generatedAt": "2026-09-25T09:32:45.397Z",
+  "generatedAt": "2026-09-26T20:49:55.481Z",
+  "presets": {
+    "ascii": {
+      "columns": 56,
+      "contrast": 1.15,
+      "edgeBoost": 0.35,
+      "localContrast": 0.45,
+      "cellAspect": 0.55,
+      "ramp": " .:-=+*#%@"
+    },
+    "dense": {
+      "columns": 72,
+      "contrast": 1,
+      "edgeBoost": 0.4,
+      "localContrast": 0.35,
+      "cellAspect": 0.5,
+      "ramp": " .:-=+*#%@"
+    }
+  },
   "designs": [
     {
       "id": "classic-clean",
       "label": "Classic Clean",
-      "blurb": "Sharp silhouette · color from image"
+      "blurb": "Readable glyphs · color from image"
     },
     {
-      "id": "classic-dense",
-      "label": "Classic Dense",
-      "blurb": "Heavier ink · stronger edges"
+      "id": "classic-bold",
+      "label": "Classic Bold",
+      "blurb": "Heavier ink · clear character shapes"
     },
     {
       "id": "standard-soft",
       "label": "Standard Soft",
-      "blurb": "Softer tones · color fill"
+      "blurb": "Softer ramp · colored glyphs"
     },
     {
-      "id": "dither-detail",
-      "label": "Dither Detail",
-      "blurb": "Fine shading · colored glyphs"
+      "id": "dense-mosaic",
+      "label": "Dense Mosaic",
+      "blurb": "Near-photo detail · 72 cols"
     }
   ],
   "characters": [
@@ -32,30 +50,30 @@
         "classic-clean": {
           "file": "001_bulbasaur__classic-clean.txt",
           "htmlFile": "001_bulbasaur__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                                                \n                                                -=  .:          \n                                              :+*#%+#@          \n                              .:--==+++===++*#*++%*+%@@@        \n                          .=+*+===++++++***+++**+==+@%@         \n                        :%%++++++++*#**++==++++====*@%%         \n          -==+--.  ... :@%#++++++#@%*+======++++===*@%@-        \n         *===+*++==+=+++++***#*+=--==%+++++++++==+*#@%%@-       \n        *++-----:--=+*##%====---=====##++++++=++*##%%@%#@=      "
+          "preview": "                                                        \n                                                        \n                                          ++  -.        \n                                        -*#@#%@+        \n                          :-=++***++***%#+*%+#@@@       \n                       =+#*+==+++++**+++**+==%@@+       \n                     +@#+===+++**++=========+%%@        \n        :++*+=: ::::=@%*=+==+#@**===========+@#@*       \n       -#==+*++++++**+**+**+=-==#+=======-=+*%%#@+      \n       %+=---::-=*###%====---=-=*%+======+*###@##@+     "
         },
-        "classic-dense": {
-          "file": "001_bulbasaur__classic-dense.txt",
-          "htmlFile": "001_bulbasaur__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "001_bulbasaur__classic-bold.txt",
+          "htmlFile": "001_bulbasaur__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                                                \n                                                ==  .:          \n                                              :*#%%*%@          \n                              .:-==++++==+***%#+*%*=@@@@        \n                          :=*#+====+++++***+++**+==+@%@         \n                        -@%++++=+++*#**+===========*@%@         \n          ==++=-.  ... -@@#++++=+#@%*+=========+===*@%@=        \n        .#===+*++=+++++*++***#*+=--==@+==========+*#@#%@-       \n        #++----::--+*###%=-==----==-=##+=======+*###%@##@+      "
+          "preview": "                                                        \n                                                        \n                                          ++  -.        \n                                        -#%@#%@+        \n                          :-==+***+**#*%#+*%+#@@@       \n                       =*#*+==+++++**+++**+==%@@+       \n                     +@#+===+++#**+========-+@%@        \n        :++*+=: .::.=@@*=+==+#@**==========-+@#@*       \n       -#==+**+=+++**+**+#*+=-==#*=======-=+*%%%@+      \n       %*=---::-=*#%%%====-----=*%+======+*###@%#@+     "
         },
         "standard-soft": {
           "file": "001_bulbasaur__standard-soft.txt",
           "htmlFile": "001_bulbasaur__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n                                                                \n                                                ;i   ,          \n                                              .tCGCtG@          \n                               ,:iiiiiiiiiittLGff0Ct0@08        \n                           ;1fLt11ttffffffLfffLLLttf@0@,        \n                        .f0ffttttfffCCLLLftttttt1ttL@0G         \n          :;ii;.       ,@8CfffttttG@C11ttttttttttttL@0@:        \n         1t1tfCGfi1ffttLCCCLLGCLftt1t0tttttttttt1tfG@G0@,       \n        tft1iiii;;;iitfff11111iii111tGCtttttttttfLGG0@GG8:      "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n                                                        \n                                          ff  1:        \n                                        iCG8G0@f        \n                          ;i1tfLLLfLLCC0GfL0tC@@@       \n                       tLCCttttffffLLfttLLttt0@@f       \n                     L@GfttttffCLLft1tttt111f80@        \n        ;ffLft; :;;:1@0Lttt1tG@LL111111ttt11L8G@C       \n       iCt1tffftffLCCtLLfCLf11t1CLtt1t1tt11fC00G@f      \n       0ftiii;;1tLGGG01111iii1i1L0f1tttttfCGGG8GG@f     "
         },
-        "dither-detail": {
-          "file": "001_bulbasaur__dither-detail.txt",
-          "htmlFile": "001_bulbasaur__dither-detail.html",
+        "dense-mosaic": {
+          "file": "001_bulbasaur__dense-mosaic.txt",
+          "htmlFile": "001_bulbasaur__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                                                                        \n                                                      ..                \n                                                     :#%+.=+*           \n                                                  :-+#+*@*+%+--         \n                                 :--++**####**####*+++*#+=*@%@+         \n                             .=+*+=====+=+++*****+++*+===+*@%%          \n                           .#%++++=+=+++***++====+=+=====+%#%*          \n           .-==--.        :@%#++++=+==*@#+===+=+=+=++++=++@##@.         \n          -+===+*%*===++==+###******+++==**++=+=+=++====+*#@#%@.        "
+          "preview": "                                                                        \n                                                                        \n                                                      -=                \n                                                     =%@#=+##           \n                                                  =+*#+*@**@#++         \n                                 -==+*###%%%##%%%#**++*#*=#@%@#         \n                             =+*#*=====+==+++****+=+++===+#%%@          \n                           =%@*+++====++**+++============+%###          \n           -=++++=        =@%#+++++===*@#+===============*%##@+         \n          =*===+#%*==+++++*###*+****++++=**+============+*#%*#@=        "
         }
       }
     },
@@ -68,30 +86,30 @@
         "classic-clean": {
           "file": "004_charmander__classic-clean.txt",
           "htmlFile": "004_charmander__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                 .:-===-:.                                      \n              .=*++++++++#@*.                                   \n            .**--===++++++*%@:                                  \n           :#+==++++++++*+*@@@.                                 \n           *%=#+++++++++**:=@@%                                 \n           @:*+++++++++++%+-@@@-                                \n           @@@+++++++++++%@@@@%%                                \n          .@@@++++++++++=*@@@@%@:                               \n          **++=+====+======*#%%@-                   ..          "
+          "preview": "                                                        \n               --=++==-                                 \n            :+*++=+++*%@+                               \n           +#---======+*@#                              \n          #*=========+=#@@+                             \n          @+*========*#.@@@                             \n         +**=========+@+@@@*                            \n         %@@+========+@@@@@@                            \n         #@@+=========%@@@#@=                           \n         @=+==-=-==-====*##@+                 =         "
         },
-        "classic-dense": {
-          "file": "004_charmander__classic-dense.txt",
-          "htmlFile": "004_charmander__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "004_charmander__classic-bold.txt",
+          "htmlFile": "004_charmander__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                 .:-===--.                                      \n              .=*++++++++#@*.                                   \n            .**---===+++=++@@:                                  \n           :#+==++====+=+=*@@@.                                 \n           #%=*+++===+++**.=@@%                                 \n           @:+=+++===++==%+=@@@=                                \n           @@@=========++%@@@@%@                                \n          :@@@++++=======*@@@@#@:                               \n          *++=============-**%%@-                   ..          "
+          "preview": "                                                        \n               :-=++==-                                 \n            :+*++=+++*%@+                               \n           +#::--=====+*@#                              \n          #*=-=======+=%@@+                             \n          @+*========*%.@@@                             \n         +##=========+@+@@@*                            \n         %@@+========+@@@@@@                            \n         %@@*=========%@@@%@=                           \n         @=+=----------=*##@+                 =         "
         },
         "standard-soft": {
           "file": "004_charmander__standard-soft.txt",
           "htmlFile": "004_charmander__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n                 .:;i1ii;,                                      \n              .1LLffffLLLG8f                                    \n             fCii1tttfffffL8@,                                  \n           ,Cf11tftttfffftL08@.                                 \n           LGtCfffftffffCL1L@8C                                 \n           @iffffffffffff8;:@@@;                                \n           @C8ftfffftffff0@@@@8G                                \n           @@@ffffftttfftC@@@@0@,                               \n          tLGCtfffttttttttLCG00@i                               "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n               ;itfft1i                                 \n            ;tLftttffL0@f                               \n           fCi;i11tttttC@G                              \n          CL11tt111ttf108@L                             \n          @fLttt11tttL0,@@@                             \n         fCC1ttt11tt1f@t@@@C                            \n         0@@f1111111tf@@@@@@                            \n         G@@Lttt11111t0@@@0@t                           \n         @tLt1111111111tCCG@f                 1         "
         },
-        "dither-detail": {
-          "file": "004_charmander__dither-detail.txt",
-          "htmlFile": "004_charmander__dither-detail.html",
+        "dense-mosaic": {
+          "file": "004_charmander__dense-mosaic.txt",
+          "htmlFile": "004_charmander__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                     .:---:.                                            \n                 :=+**+++*+*#*=                                         \n               -*+-====++++++*%@:                                       \n             .**=--=+=+=++++=+*%@:                                      \n             %++=+++++=++++*+*@@%@.                                     \n            :@*+*+++++=++++*++ @@%#                                     \n            +++=+++++=+++++=*% @@@@-                                    \n            %@#++=+=++=+=+++*@@@@@%#                                    \n            %@@#=++++=++=++=+@@@@@#@.                                   "
+          "preview": "                                                                        \n                     -=====-                                            \n                 -+*#*+++**#%#*                                         \n               +*=--======++++%@+                                       \n             -#*---==========+*%@+                                      \n             @++=+++=======*=*%@%@=                                     \n            +@#+++=+======++++ @@@%                                     \n            #++=============#@ @@@@+                                    \n            @@@*============%@@@@@%%                                    \n            @@@%============#@@@@@*@=                                   "
         }
       }
     },
@@ -104,30 +122,30 @@
         "classic-clean": {
           "file": "006_charizard__classic-clean.txt",
           "htmlFile": "006_charizard__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                                                \n                                                                \n                                                                \n                        ..=:                                    \n                    .  -*##***%#*:                              \n               ...:+#.  *#%#%%%%%%*-.          .:               \n           .+%@@@@@#    .=########+:=*.         **.             \n        .-#@@@%#%@@@.      ..:####%             +@@#-:          \n      -@@@%#####%@%@*         -*###:           *@@@@@@*.        "
+          "preview": "                                                        \n                                                        \n                                                        \n                                                        \n                     :-=:                               \n                  . -#%###%%#-                          \n             --==%=  #%####%%%*-.        .-             \n          +%@@@@@=   :*%%%#*#%=:+-       .#*-           \n       -+@@%##%@@*      :-##*#+           #@@#=         \n     =@@@###**%@%@-       -#**#          #@@@@@%-       "
         },
-        "classic-dense": {
-          "file": "006_charizard__classic-dense.txt",
-          "htmlFile": "006_charizard__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "006_charizard__classic-bold.txt",
+          "htmlFile": "006_charizard__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                                                \n                                                                \n                                                                \n                        ..=:                                    \n                    .  -*#%##*%#*:                              \n               ..:-*#.  *%%#%%%%@%#-.          .-               \n           .+@@@@@@%    .=##%%####+:=*.         *#:             \n        .-#@@@%#%@@@.      ..-##*#@             +@@%=:          \n      -@@@%#####%@%@*         -*#*#-           *@@@@@@*.        "
+          "preview": "                                                        \n                                                        \n                                                        \n                                                        \n                     .-=:                               \n                  . -#%#%#%%#:                          \n             ---=%-  #%%#%#%@@*-.        .-             \n          +@@@@@@=   :*%%%###%=:+:       .#*-           \n       -+@@@%#%@@*      :-##*#*           #@@#=         \n     =@@@####*%@@@-       :#**%          #@@@@@@-       "
         },
         "standard-soft": {
           "file": "006_charizard__standard-soft.txt",
           "htmlFile": "006_charizard__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n                                                                \n                                                                \n                                                                \n                         .;,                                    \n                       ;fL0Lf1ft1.                              \n                  .i0:  C0GG0GG00Gt:            ,               \n            ;fLG8@80.   :LCGGGCCGGt1Lf,        ,G1              \n         ,18@@800@@G      ,:itGCCC0             i@@1,           \n      ,t0@8GGGGG0@8@1         1CCCG,           ;@@@@@8;         "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n                                                        \n                                                        \n                                                        \n                     :it;                               \n                  , iC0GGG00Gi                          \n             i11tG1  G0GCGG088Li:        ,i             \n          f8@@@@@1   ;L000GCC01;f;       ,GCi           \n       1L@@8GG0@@C      ;iCGCGL           G@@Gt         \n     t@@8GGCCC0@8@i       iCCL0          G@@@@@8i       "
         },
-        "dither-detail": {
-          "file": "006_charizard__dither-detail.txt",
-          "htmlFile": "006_charizard__dither-detail.html",
+        "dense-mosaic": {
+          "file": "006_charizard__dense-mosaic.txt",
+          "htmlFile": "006_charizard__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                                                                        \n                                                                        \n                                                                        \n                                                                        \n                          .::*+-...                                     \n                       .  -**#****%*#-                                  \n                   .:-%+   *#######%%##=:            .-                 \n             .=##%@%%@-    .+*###*#*#**-=#+          .#+.               \n           :*@@@%%#@@%-      .:-=*#**#%:              -%@+:             "
+          "preview": "                                                                        \n                                                                        \n                                                                        \n                                                                        \n                                                                        \n                          :-=**=---                                     \n                       -  =*##*###%%%+                                  \n                   ==+%*   ##***#*#####+-            :=                 \n             =*%%@@@@@=    -*####******==**          :##=               \n           +#@@%%##@@@+      -=++#****%=              +@@%+             "
         }
       }
     },
@@ -140,30 +158,30 @@
         "classic-clean": {
           "file": "007_squirtle__classic-clean.txt",
           "htmlFile": "007_squirtle__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                      .:------:.                                \n                  :===--=++++++*#+:                             \n                -#*---=+++=+*++++*#%-                           \n               .@#+++++++===%..@**###*                          \n               @%++++++===+@@%#@@**##%%                         \n              =@#===++++==%@@@@@%####%@-                        \n             .#%+=========*@@@@-%###%%@+                        \n             ##+++*****++==---=*%%%%%%@-                        \n             .@@%@@@%%@@@@@@@@@@@@%%%%#                         "
+          "preview": "                                                        \n                   ::-===--:                            \n                ===--===+++*#+-                         \n              +%+:-=====++==+*%*:                       \n             -@*======-=#+:@#**#%-                      \n             @%+=======@@@%@@+**#@                      \n            +@%========@@@@@%*###@+                     \n           :#%+-====--=@@@@=#**##@*                     \n           =%++++***++=--:-*####%@*                     \n            @@%@@%#%@@@@%%@%%####@                      "
         },
-        "classic-dense": {
-          "file": "007_squirtle__classic-dense.txt",
-          "htmlFile": "007_squirtle__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "007_squirtle__classic-bold.txt",
+          "htmlFile": "007_squirtle__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                      .:------:.                                \n                  :===--===++++*#+-                             \n                -#*-:-=++==+*++=+*#%-                           \n               .@#++++====-=%..@***#%#.                         \n               @@+========+@@@%@@+*##%%                         \n              +@%=========%@@@@@%*###%@-                        \n             .#%=========-#@@@@-%####%@+                        \n             #%+==*****+==--::=*####%%@=                        \n             :@@%@@@%%@@@@@@@@@@@%###%%                         "
+          "preview": "                                                        \n                   .:-===--.                            \n                ===--===+++##+:                         \n              +%+:--====++==+*%#:                       \n             -@*======-=#=.@#**#@-                      \n             @%+=====-=@@@%@@+*#%@                      \n            +@%========@@@@@@*##%@+                     \n           .#@+-===----@@@@=%*##%@*                     \n           =@+++*#**++=-:::*####%@*                     \n            @@%@@%%%@@@@@@@@@%##%@                      "
         },
         "standard-soft": {
           "file": "007_squirtle__standard-soft.txt",
           "htmlFile": "007_squirtle__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n                      ,:;;iii;:.                                \n                  ,iitii1tttfffCLt:                             \n                :LCi;i1tttttLfttfLCG:                           \n                @Cfttttttt11G::0LCCC0f                          \n               8Gfttttttttt@@ft@8LCGGGL                         \n              1@8tttttttttG@@@@@0CGGG0@:                        \n             .C@ttttttttt10@@@@18GGGG08t                        \n             LL1ttfttttt11itffLfG00000@t                        \n             i@8GG8@@@@8880GGG8@@80000@                         "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n                   :;i1111i:                            \n                11tii1ttfffCGf;                         \n              f0t;i1tt1tffttfL0C:                       \n             i@Ltttt111t0f:8CLLG8i                      \n             @0f1111111@@@8@@fCCG@                      \n            f@0t111111t@@@@@8CCCG@f                     \n           :G8f11111111@@@@t0CCGG8C                     \n           t8ftfLCCLfftiiiiLGGGG0@L                     \n            8@08@0008@@@888880GG0@                      "
         },
-        "dither-detail": {
-          "file": "007_squirtle__dither-detail.txt",
-          "htmlFile": "007_squirtle__dither-detail.html",
+        "dense-mosaic": {
+          "file": "007_squirtle__dense-mosaic.txt",
+          "htmlFile": "007_squirtle__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                          .:::-::.                                      \n                     .--=+===++++***=-                                  \n                   :+*::--==+=+=++++++#+.                               \n                  ##*==+=+++=+=*+**=**##%=                              \n                 :##+++=++==+=-@+  @#***###                             \n                :@@===++=+=+==@@@@@@@+*#*###                            \n                +@%=++=+=+=+=+@@@@@@#*####%@:                           \n               :%@+====+=====+@@@@@-%#####%%=                           \n               %====*++=+=+==-=++++*###%#%%@=                           "
+          "preview": "                                                                        \n                          :----=--                                      \n                     :-==++=+++++*#*+=                                  \n                   =**-:---=========++%*-                               \n                  %#*===++=====++**+*+*#%*                              \n                 +%#+=========+@#  @%+***#%                             \n                +@@+=========+@@@@@@@+***##%                            \n                %@@+=========#@@@@@@%****##@=                           \n               -@@*==========*@@@@@-%****##@*                           \n               @+===*+++++++===*+++*#######@*                           "
         }
       }
     },
@@ -176,30 +194,30 @@
         "classic-clean": {
           "file": "025_pikachu__classic-clean.txt",
           "htmlFile": "025_pikachu__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                                                \n              :@                                                \n             #@@=                                               \n            %@@@*                                               \n           =@@=-=                                      .-=*     \n           %--::=                 .:::+@@@@@@@*      -=:..:-    \n          :----+:             :-=++--=@@@@@@%:    .=+::.::-*    \n          =----#-::::::.  .-=+------=@@@@%-     .=+---::---=-   \n          :+---:..::-==-++*=----===*@@+:      :+=-----------+   "
+          "preview": "                                                        \n                                                        \n            +@                                          \n           #@@#                                         \n          +@@@#                                         \n          @@%+=                                 .-==    \n         -*=::-               :::+@@@@@@@     -=:..=    \n         =-:-=:           :-=+=-+@@@@@@#    :+-:..:-=   \n         +-:-#-.:::::  -=+-----=%@@@@*    :+---:::--*   \n         +=:-:..:=+===+=------=%@%*     .+=--:----:-*.  "
         },
-        "classic-dense": {
-          "file": "025_pikachu__classic-dense.txt",
-          "htmlFile": "025_pikachu__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "025_pikachu__classic-bold.txt",
+          "htmlFile": "025_pikachu__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                                                \n              -@                                                \n             %@@+                                               \n            %@@@#                                               \n           +@@+-=                                      .--*     \n           %=-::=                 .:::+@@@@@@@#      -=:..:-    \n          :--:-+:             :--*+--=@@@@@@@-    .=+::..:-*    \n          =--:-%-..::::.  .-=+------=@@@@@=     .=+--::::--=-   \n          :+-:-:...:-==-=+*-------=*@@*-      :+=---------:-+   "
+          "preview": "                                                        \n                                                        \n            +@                                          \n           #@@#                                         \n          +@@@%                                         \n          @@%+=                                 .-=-    \n         -*=::-               ::.+@@@@@@@     :-: .=    \n         -::-=:           :-=*--+@@@@@@#    :+-:..:-=   \n         +-:-#-..:::.  -=+---:-=@@@@@*    :+-::::::-*   \n         +-:-:...-+=-=+=------=%@%*     .+=:-::-:::-*.  "
         },
         "standard-soft": {
           "file": "025_pikachu__standard-soft.txt",
           "htmlFile": "025_pikachu__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n                                                                \n              ,0                                                \n             t@@1                                               \n            f@@@C                                               \n           ;@@Lit                                       ;it     \n           8t;;;t                   ,,;C@@@@@@C      :ii,,i:    \n          ,1;;;1;              :;tft;i@@@@@@@1     ;fi:,:::f    \n          1;i;iL..,,.      :itfiiiiii8@@@@G:     ;fii;:;;iif:   \n          iiii111;:;itftiiC1iiiiiiii8@@f,      ifiiii;iiiiiit   "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n                                                        \n            f@                                          \n           G@@G                                         \n          f@@@0                                         \n          @@0ft                                 ,i11    \n         1L1;:1               :;;L@@@@@@@     ;i:,,1    \n         1;;it;           ;i1f1if@@@@@@0    ;ti:,:;i1   \n         fi;iCi::;;;:  i1tii;;i18@@@@L    :ti;;:;;;iL   \n         t1;i;:,:1tt1tftiiiiii10@8C     :f1;;;;i;;;iL,  "
         },
-        "dither-detail": {
-          "file": "025_pikachu__dither-detail.txt",
-          "htmlFile": "025_pikachu__dither-detail.html",
+        "dense-mosaic": {
+          "file": "025_pikachu__dense-mosaic.txt",
+          "htmlFile": "025_pikachu__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                                                                        \n                 -                                                      \n               :@@:                                                     \n              =@@@*                                                     \n             -@@@@*                                              :      \n             @@+-:+                                .          :=-+:     \n            ++-:--+                    .:-:+@@@@@@@@=      .==:...+     \n            +-:--=-                --=*+-:-@@@@@@@%:     .++::.:::=-    \n            *----*             --++------=@@@@@@=      :+=--::::--=*    "
+          "preview": "                                                                        \n                                                                        \n                 *                                                      \n               *@@*                                                     \n              %@@@@                                                     \n             *@@@@#                                              :      \n             @@%+-+                                +          ---+:     \n            +*=-:-+                    :---#@@@@@@@@*      :-=:.::+     \n            +-::-==                --++=--*@@@@@@@@*     :==::.:::--    \n            *=---*             -=++------*@@@@@@%      -+=--::::---*    "
         }
       }
     },
@@ -212,30 +230,30 @@
         "classic-clean": {
           "file": "039_jigglypuff__classic-clean.txt",
           "htmlFile": "039_jigglypuff__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                                                \n                :=--:                                           \n               --*=:.:=-:                                       \n              .=#@@@=:.:-=-                                     \n              ++@@@@@@-::::==::---====--:                       \n             :=@@@@@@@@-::-+=:::...::::.:=-                     \n             =-@@@@%+-:.:+=:............::-+                    \n             *=@#-.....:=:::.::::::::::::::-+                   \n             @-:......:*::::::::::::::::::::===-::::..          "
+          "preview": "                                                        \n                                                        \n              :--:.                                     \n             -=#+:.--:                                  \n            .*@@@@=.::=-                                \n            =*@@@@@*:::-+-----====-:                    \n            *@@@@@@@=::==-::::::::.:=:                  \n           -=@@@@@*=::=-:..........::=-                 \n           ==@%+-. .:-::..::::::::::::*.                \n           *=-:....:+:::::::::::::::::-==-::::.         "
         },
-        "classic-dense": {
-          "file": "039_jigglypuff__classic-dense.txt",
-          "htmlFile": "039_jigglypuff__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "039_jigglypuff__classic-bold.txt",
+          "htmlFile": "039_jigglypuff__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                                                \n                :-:::                                           \n               --*+..:--:                                       \n              .=#@@@+:.::=-                                     \n              ++@@@@@@-::::==::---====--:                       \n             :=@@@@@@@@-.:-+=:......::...=-                     \n             =-@@@@@*=:..+=..............::*                    \n             *=@#=..   :=::...::::::::::::::+                   \n             @-:.. ....*:::.:::::::::.::::::===:::::.           "
+          "preview": "                                                        \n                                                        \n              :-::.                                     \n             -=%+: --:                                  \n             *@@@@=..:=-                                \n            =*@@@@@*::::+-:---===--:                    \n            *@@@@@@@=.:==-.....:::..=:                  \n           :=@@@@@#=.:+:............:--                 \n           ==@%+:.  :-:.........::::::*.                \n           *-::  ..:+:...............:-==:::::.         "
         },
         "standard-soft": {
           "file": "039_jigglypuff__standard-soft.txt",
           "htmlFile": "039_jigglypuff__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n                                                                \n                ,i;;:                                           \n               ;1ti:,;1;.                                       \n              .tL@@8i::;i1;                                     \n              t1@@@@@G;:;;;t; :;;iiiiii;.                       \n             ,10@@@@@@@;:;;tft::::::::::;1:                     \n             1i@@@@@0fi::tf:::::::,,,,,,::11                    \n             f1@@Li:,,,,1;::,:::::::::;;;;;1;                   \n             @11:,,,,,:L;:::::;;;;;;:::;;;;;C1:::,.             "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n                                                        \n              ;1;;,                                     \n             it0f;,ii:                                  \n            .L@@@@t::;1;                                \n            1C@@@@@C;:;;t;;;ii111ii:                    \n            L@@@@@@@1:;11i::::::::::1:                  \n           ;t@@@@@Ct::t;:,,,,,,,,,,::ii                 \n           11@0fi:,,;i::,,:::::::::::;f,                \n           L1i;,,,,:t;:::::::::::::::;i11;;;;:,         "
         },
-        "dither-detail": {
-          "file": "039_jigglypuff__dither-detail.txt",
-          "htmlFile": "039_jigglypuff__dither-detail.html",
+        "dense-mosaic": {
+          "file": "039_jigglypuff__dense-mosaic.txt",
+          "htmlFile": "039_jigglypuff__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                                                                        \n                   --:.                                                 \n                 .+:::-=--                                              \n                 +-%@+:..:+-:                                           \n                =-%@@@@=:::--==        .:.                              \n               .=+@@@@@@%-::-:-+----===--====-                          \n               +-@@@@@@@@@-::-=+=::::::::::::.==                        \n               +=@@@@@@*-:::=+-.::::.:..:..:.::-+:                      \n              .+=@@#=:....:=-:::.:::::::::::-:::-*                      "
+          "preview": "                                                                        \n                                                                        \n                   --:.                                                 \n                 :+--:----                                              \n                 +=@@#-:::==-                                           \n                ==@@@@@#=::-:==.       :::                              \n               :=#@@@@@@@+-::--+=---==----==--                          \n               +=@@@@@@@@@-::-===:::::::::::::==                        \n               +=@@@@@@%#=::==-:::::::......::::+-                      \n              :+=@@%*+-:..:=-:::::::::::::::::::-*                      "
         }
       }
     },
@@ -248,30 +266,30 @@
         "classic-clean": {
           "file": "052_meowth__classic-clean.txt",
           "htmlFile": "052_meowth__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                          -         .                           \n                         .*         +.                          \n                    .::.  -:       ==                           \n                    @@@@@@--.:--: .::   .-==.                   \n                    @@@@@@**#---=--=:*@@@@@@@                   \n             .      @@@@@@#:*----@:@@@@@@@@@@...:.              \n              -=:   #@@=.. .+---++.*%%@@@@@@@:-:.:-.            \n                :==.:%. :.  *=-=#.    .=#@@@=-*-=-:-.           \n                   := ::-:- .:--...---:.=@@#  .@#*##=.          "
+          "preview": "                                                        \n                      ..        .                       \n                      --       --                       \n                  =+= :-      .-:                       \n                 +@@@@@-:---: -:   =+*+                 \n                 #@@@@@:@=:-+:=*#@@@@@@=                \n            .    #@@@@@=+-:-=%-@@@@@@@@* .:             \n            -=:  +@@+::.-::-+--@@@@@@@@*::.::           \n              :=::@= :. -+--*.  .:=#@@@==-=-:=          \n                .-.::--. :--..:--: +@@= .#*+#+-         "
         },
-        "classic-dense": {
-          "file": "052_meowth__classic-dense.txt",
-          "htmlFile": "052_meowth__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "052_meowth__classic-bold.txt",
+          "htmlFile": "052_meowth__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                          -         .                           \n                         .*         +.                          \n                    .--:  ::       ==                           \n                    @@@@@@--.:--: .::   :-++:                   \n                    @@@@@@*+#---=--=-#@@@@@@@                   \n             .      @@@@@@#:*-::-@.@@@@@@@@@@:..:.              \n              -=:   %@@=..  +---++ *%@@@@@@@@:-:..-.            \n                :==.:%: :.  *=--#.    .=*@@@=-+:=-.-:           \n                   .= ::-:- .:::. .--:. -@@#  .@#*##=.          "
+          "preview": "                                                        \n                      ..        .                       \n                      :-       --                       \n                  =+= :-       -.                       \n                 +@@@@@-.-:-: ::   =+*+                 \n                 #@@@@@:@=:-+:-*#@@@@@@=                \n            .    #@@@@@=+-::-@:@@@@@@@@* ..             \n            --:  +@@+:. -::-+--@@@@@@@@*.: .:           \n              :=::@= :. -+--#.   .=#@@@-=-=-:=          \n                 -..:--. .::. :-:: +@@=  #**%+-         "
         },
         "standard-soft": {
           "file": "052_meowth__standard-soft.txt",
           "htmlFile": "052_meowth__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n                          ;         .                           \n                         ,L         t,                          \n                     ,,   i:       i1                           \n                    8@@@@Lii.:;:, .;;    ,::.                   \n                    @@@@@@fLGiiif;ii.iC@@@@@@                   \n                    @@@@@@G;Ci;;;@;0@@@@@@@@@  ,.               \n             :t;,   8@@Li,,,t;iitC.@@@@@@@@@@;i;;i;.            \n               :it; ;@;... .L1iiC:...,;L00@@Gtt::;,i.           \n                  :it,:;t1:.:iii;,.,;;.:1@@@  ,G@L1Cf:          "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n                      ,,        ,                       \n                      ;i       ;i                       \n                  tft ;i      ,i:                       \n                 f@@@@@1:i;i: ;;   1fCf                 \n                 G@@@@@i@1;;t;1LG@@@@@@t                \n           .,    G@@@@@tfi:;10i@@@@@@@@C.,:.            \n            ii:  t@@L;:.i;;iti1@@@@@@@@C::,:;.          \n              ;1;;8t.;,.it;iC, ..:tG@@@tti1i;1          \n                ,i,:;i;,.:;;:.:i;:,f@@t ,GLfGt;         "
         },
-        "dither-detail": {
-          "file": "052_meowth__dither-detail.txt",
-          "htmlFile": "052_meowth__dither-detail.html",
+        "dense-mosaic": {
+          "file": "052_meowth__dense-mosaic.txt",
+          "htmlFile": "052_meowth__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                             :                                          \n                             *:         :*                              \n                             ==         ==                              \n                       ##*+- -=        --.                              \n                      -@@@@@@#-:=====. ==   :-+#%#.                     \n                      +@@@@@@@.@==--=+-.==%@@@@@@@+                     \n               :      =@@@@@@@.#=----%+=@@@@@@@@@@* :::.                \n               -+-:   :@@@+-...=----=#:=@@@@@@@@@@*--:.--:              \n                 :==-. @@: ... ===-=*-....:-*%#@@@++-:.-::=             "
+          "preview": "                                                                        \n                             -                                          \n                             *-         -+                              \n                             ==         ==                              \n                       %@%%# ==        =-:                              \n                      *@@@@@@%==+====: -=   +*#%@%-                     \n                      %@@@@@@@.@+----+=-*%@@@@@@@@#                     \n               :      #@@@@@@@:#=--:=#++@@@@@@@@@@@ :::.                \n               -=-:   *@@@*=--.=----=#-*@@@@@@@@@@@--:.--:              \n                 --=-: @@+.....=----+=.:--=+###@@@#+-:--::=             "
         }
       }
     },
@@ -284,30 +302,30 @@
         "classic-clean": {
           "file": "094_gengar__classic-clean.txt",
           "htmlFile": "094_gengar__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n              ::                                                \n              +#*-                                              \n              +#*+*=.                                           \n              =##+++*+:                                         \n              -##*++++#*: =+. :    .:=+*@:                      \n              :%#******###%@@#@*=#@@@%%%.                       \n    .:@*-:     %#***###**********####%@=-++.                    \n   .=####**=:  ***#*+++++==+++++++****###@+-----============    \n    :####**++**%%#*+=======+++==++++****####*++++++++**#%#-     "
+          "preview": "                                                        \n            -=                                          \n            +%%=                                        \n            +%**#=                                      \n            =%#++*#=                                    \n            -@#*+++##= %+ -:  -=+#%@:                   \n            -@#*****#%#@@%@%*@@@@@@:                    \n   .-%#+-    @#***####*##*####%%%@++**                  \n   =%%%%##+: *#*#*+++===++++++**#*#%@+====+++++****+-   \n   :%@##***##%%#*+============++***####****++**##@%=    "
         },
-        "classic-dense": {
-          "file": "094_gengar__classic-dense.txt",
-          "htmlFile": "094_gengar__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "094_gengar__classic-bold.txt",
+          "htmlFile": "094_gengar__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n              -:                                                \n              *##=.                                             \n              *%*+#=.                                           \n              =%#+++*+:                                         \n              -%#*++++##: =*. :    :-=*#@:                      \n              :@#*****##%#@@@#@#+#@@@@@@.                       \n    .:@*-:     @#**######*****####%%%%@==+*.                    \n   .+%%%%*#+-. ##*#*++++===+++++++***###%@+-=--====++++++++=    \n    -%%###*+*#*@%#*+========++===+++****####**+**+++**##@%=.    "
+          "preview": "                                                        \n            :=                                          \n            +%%=                                        \n            +@#*#=                                      \n            =@#++*#=                                    \n            -@#*+++#%- %+ -:  -=+#%@:                   \n            -@##***#%@#@@%@%*@@@@@@:                    \n   .-@%=:    @#**############%%%%@+=**                  \n   =%@%%##=: *###*+++===+=+++**####%@+====+++******+-   \n   .%@%##**##@%#*+============+****##%#****++**#%@%=    "
         },
         "standard-soft": {
           "file": "094_gengar__standard-soft.txt",
           "htmlFile": "094_gengar__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n              ::                                                \n              fCL;                                              \n              fGLfLi.                                           \n              1GCftfL1.                                         \n              iGCLfftfCt. ;i  .     ,;itL:                      \n              :0CCLLLLCGGtG@0t@t;tC@8888;                       \n      Li,     .8CCCCCCCCCCCCCCCGGGG000@1:;i,                    \n   ,C00GGCt;.  CCCCCLffttttttttffLLCCCCG0@f,:,::::;;;;;;;;;:    \n    ,CGCCLffLfiC0GGLttttttttttttttfLLCCCCGGCLfffffffffLCC0L;    "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n            ;1                                          \n            f0Gt                                        \n            f0CLC1                                      \n            t0GftLC1                                    \n            18GLfffGG1 0f 1;  itfGG@;                   \n            i@GCCCLCG0C@@0@0L8@@@88;                    \n   ,10Gti    8CCCCCCCCCCCCCCCG0008ftLL                  \n   10000GGt; CCCGLffttttttttfLCCCCG0@tttttfffLLLLLLf;   \n   :08GCCLLCG80GCfttttttttttttfLLCCCGGGLLLLffLCCG8G1    "
         },
-        "dither-detail": {
-          "file": "094_gengar__dither-detail.txt",
-          "htmlFile": "094_gengar__dither-detail.html",
+        "dense-mosaic": {
+          "file": "094_gengar__dense-mosaic.txt",
+          "htmlFile": "094_gengar__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                :                                                       \n                %#+:                                                    \n                ##+*+:                                                  \n                *#*=++*:                                                \n                +#*+++++*-                   .:                         \n                =#**+++++*#- :%=  -    ::=+#%@-                         \n                -##****+**####%%%#%*=*@%%%%%%:                          \n      :*=:.     .%******#**#******#*####%#%@-:--=                       \n    =#%####+-:   %#**#**+++=++++=+++++*****##%@#:.::.:::::-:-::::::.    "
+          "preview": "                                                                        \n                =                                                       \n                @%*-                                                    \n                %#*#*=                                                  \n                %#*++*#=                                                \n                ###+==+*#+                   =-                         \n                *#**+++++#%+ +@*  +    =+*#%@@=                         \n                +%********##%#@@%%@#*%@@@@%%@+                          \n      +%*=-     =@********################%@==++=                       \n    +%%%#%%*+-   @*******++++++++++++******##%@%=--------==========:    "
         }
       }
     },
@@ -320,30 +338,30 @@
         "classic-clean": {
           "file": "133_eevee__classic-clean.txt",
           "htmlFile": "133_eevee__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n         :.                                                     \n         #*-                                                    \n        :@@#+                                                   \n        +@@@@*.                                                 \n        -@@@@@*.                                                \n        .%@@@@@*                                                \n         +@@@@@#=                             ...::.            \n         .%@@@@@* ..--:.--           .::=+#%%@@@%#:             \n          .#@@@@*===+++++=++--    :=#%@@@@@@@@@%-               "
+          "preview": "                                                        \n        -.                                              \n       :@#:                                             \n       +@@#-                                            \n       #@@@%=                                           \n       +@@@@%-                                          \n       -@@@@@#.                                         \n        %@@@@@=                        :-----           \n        =@@@@@# ::=-:=- .       :-=*#%@@@@%*.           \n         =@@@@#=++++++=*+=.  :=#@@@@@@@@@@+             "
         },
-        "classic-dense": {
-          "file": "133_eevee__classic-dense.txt",
-          "htmlFile": "133_eevee__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "133_eevee__classic-bold.txt",
+          "htmlFile": "133_eevee__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n         :.                                                     \n         %#-                                                    \n        :@@%+                                                   \n        +@@@@*.                                                 \n        -@@@@@#.                                                \n        .@@@@@@#                                                \n         *@@@@@%=                            ...:::.            \n         .%@@@@@# ..--:.--           .:-=+#@@@@@%#:             \n          .#@@@@*===+++++=++=-    :=#%@@@@@@@@@@=               "
+          "preview": "                                                        \n        -.                                              \n       :@#:                                             \n       +@@%-                                            \n       #@@@%-                                           \n       +@@@@%-                                          \n       -@@@@@%.                                         \n        @@@@@@=                        ::----           \n        =@@@@@# ::=::=- .       .-=*#@@@@@@*.           \n         =@@@@#=++++++=*+=.  :=#@@@@@@@@@@+             "
         },
         "standard-soft": {
           "file": "133_eevee__standard-soft.txt",
           "htmlFile": "133_eevee__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n         ,.                                                     \n         CL:                                                    \n        :@@C1                                                   \n        t@@@0f.                                                 \n        1@@@@8L.                                                \n        ,8@@@@0f                                                \n         C@@@@@C;                                ,,.            \n         :8@@@@@L . ::  ;:            .,:;ittCG80Ci             \n          ;0@@@@L;1tftfftt11:,     :iC08@@@@@@@@L,              "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n        i,                                              \n       :8C;                                             \n       t@@Gi                                            \n       C@@@01                                           \n       f@@@@0i                                          \n       i@@@@@G,                                         \n        8@@@@8t      .                 ;;iii;           \n        1@@@@@G ;;t;:1i ,       :itLG8@@@@0L,           \n         t@@@@G1tftttttff1,  :tG@@@@@@@@@8t             "
         },
-        "dither-detail": {
-          "file": "133_eevee__dither-detail.txt",
-          "htmlFile": "133_eevee__dither-detail.html",
+        "dense-mosaic": {
+          "file": "133_eevee__dense-mosaic.txt",
+          "htmlFile": "133_eevee__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n          ..                                                            \n          =+-                                                           \n          %@*=                                                          \n         -%@@#*.                                                        \n         +%@@@#*:                                                       \n         -%@@@@%*:                                                      \n         .#@@@@@%*.                                                     \n          +@@@@@@*-                                    .::              \n          .#@@@@@@*    =.  --               .::-==+*##%*+.              "
+          "preview": "                                                                        \n          ::                                                            \n          **=                                                           \n          @@#+:                                                         \n         =@@@%#-                                                        \n         *@@@@%#-                                                       \n         =%@@@@%#-                                                      \n         :%@@@@@%#:                                                     \n          *@@@@@@#+                                    --:              \n          -%@@@@@@#:.  =-  =-               --=+**##%@%*+:              "
         }
       }
     },
@@ -356,30 +374,30 @@
         "classic-clean": {
           "file": "150_mewtwo__classic-clean.txt",
           "htmlFile": "150_mewtwo__classic-clean.html",
-          "columns": 64,
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                 -::.    .                      \n                                 ---+:..:==:                    \n                                .-::+-:--=#                     \n                               :=::::---:-*.                    \n                               =::::+=-:::==                    \n                      :::.     .----#@=-==+=                    \n                     :-:-*.    .*%+===--=+-                     \n                      :+#%%+-:.+%*.%%*+=+=.                     \n                  .::::=+##*#==+-=+:=++-:                       "
+          "preview": "                                                        \n                             =--    :                   \n                             =:+-::==*                  \n                            :-:-+---+*                  \n                           :=::::-::-+                  \n                           =:::+*=::-*-                 \n                   :--     :==-+@*-==*:                 \n                   +-=#    -##====-=*-                  \n                   :+#%%*-:+#+-%%==++                   \n                --==++*#%+=+-=--++-:.                   "
         },
-        "classic-dense": {
-          "file": "150_mewtwo__classic-dense.txt",
-          "htmlFile": "150_mewtwo__classic-dense.html",
-          "columns": 64,
+        "classic-bold": {
+          "file": "150_mewtwo__classic-bold.txt",
+          "htmlFile": "150_mewtwo__classic-bold.html",
+          "columns": 56,
           "rows": 31,
-          "preview": "                                                                \n                                 -::.    .                      \n                                 ---+:..-=+:                    \n                                .-::+=:--+%                     \n                               :=::::-:::-#.                    \n                               +::::+=-:::=+                    \n                      :::.     .=---%@=-==*=                    \n                     :---#:    .#%+=-=--=+=                     \n                      :+#%@*=:.*%*.%%*+=+=.                     \n                  :::--++####==*-=+:=++-:                       "
+          "preview": "                                                        \n                             ---    .                   \n                             =:+-:.==*                  \n                            :-:-+:--+*                  \n                           :-:.:::::-+                  \n                           =::.+*=::-*-                 \n                   :::     :=-:+@*-==#:                 \n                   +-=%    -#%==-=-=*-                  \n                   :+#%@*-:*%+-%%==++                   \n                --==++##%+=*----+*-:.                   "
         },
         "standard-soft": {
           "file": "150_mewtwo__standard-soft.txt",
           "htmlFile": "150_mewtwo__standard-soft.html",
-          "columns": 64,
-          "rows": 32,
-          "preview": "                                                                \n                                 ;::,    .                      \n                                 i;it,. ;11:                    \n                                .i;;ti;1i1C                     \n                               ,1;;;;1;;;iC                     \n                               t;;:;1i;;;;1i                    \n                      .,,      ;i;;;G@1;iitt                    \n                     :i;if      LCfi11;1ttt                     \n                      ifL0Ci:, tGG,0GLLtfL,                     \n                   ,. .1fCGCf1tff1iifL1ii                       "
+          "columns": 56,
+          "rows": 31,
+          "preview": "                                                        \n                             1ii    :                   \n                             1;fi::1tL                  \n                            ;i;it;iitL                  \n                           ;1::;;;;;if                  \n                           t:::fL1;;iLi                 \n                   :;i     ;11if@Lit1C;                 \n                   fitG    iGGtt11;1Li                  \n                   ;fG08L1;LGti0Gt1ff                   \n                ii11ffCC0f1fi1i1ff;;,                   "
         },
-        "dither-detail": {
-          "file": "150_mewtwo__dither-detail.txt",
-          "htmlFile": "150_mewtwo__dither-detail.html",
+        "dense-mosaic": {
+          "file": "150_mewtwo__dense-mosaic.txt",
+          "htmlFile": "150_mewtwo__dense-mosaic.html",
           "columns": 72,
           "rows": 36,
-          "preview": "                                                                        \n                                     :::.                               \n                                     =--*     =--                       \n                                     --:=*---+-==                       \n                                    ---:-+=-:-=+=                       \n                                   ---::::---:-==                       \n                                   +-::-=*=:-::=*.                      \n                         ::-.      :=---=@%+-==+*.                      \n                        =---+:     .+#*--=--==++.                       \n                        :=++%%=::  +#%:+#%**-++-                        "
+          "preview": "                                                                        \n                                     ----                               \n                                     =--*     +==                       \n                                     ---=*===+-=+                       \n                                    =-::=+=---==+                       \n                                   =--::::--:--=+                       \n                                   +-:::+#+-::-=*-                      \n                         ---:      -===-+@@+-===#-                      \n                        ====*=     -*#*====-===*-                       \n                        -++*#%*=-  ##%-+##**-=*+                        "
         }
       }
     }
