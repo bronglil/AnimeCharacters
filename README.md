@@ -6,20 +6,29 @@ Anime sprites and portraits are the *hook* — the API is general. Same call tur
 
 ```bash
 npm install @lilbrong/anime-ascii
-npx anime-ascii photo.png --look ascii --color
+npx anime-ascii photo.png --format text,html,png -o out
+# → out.txt  out.html  out.png
 ```
 
 ```js
 import { convertPathColored } from "@lilbrong/anime-ascii";
+import { writeFileSync } from "fs";
 import "@lilbrong/anime-ascii/ascii.css";
 
-const { text, html, ansi } = await convertPathColored("photo.png", {
+const { text, html, png } = await convertPathColored("photo.png", {
   look: "ascii",
-  quality: "high",
+  style: "anime",
+  formats: ["text", "html", "png"], // pick any: text | html | ansi | png
 });
+
+writeFileSync("out.txt", text);
+writeFileSync("out.html", html);
+writeFileSync("out.png", png);
 ```
 
 **Who it's for first:** Node / terminal developers (Discord bots, pipeline logs, TUI thumbnails). Anime gallery is optional flair in this repo.
+
+**Outputs:** choose `text`, `html`, `ansi`, and/or `png` (pic).
 
 ## Why anime-ascii?
 
