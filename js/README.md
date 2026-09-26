@@ -21,6 +21,22 @@ Install from this monorepo (`master`):
 npm install github:bronglil/AnimeCharacters#master:js
 ```
 
+## Install
+
+**npmjs (public):**
+```bash
+npm install @lilbrong/anime-ascii
+```
+
+**GitHub Packages** (same code, scope matches GitHub user — see [Packages](https://github.com/bronglil/AnimeCharacters/packages)):
+```bash
+# ~/.npmrc
+# @bronglil:registry=https://npm.pkg.github.com
+# //npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+
+npm install @bronglil/anime-ascii
+```
+
 ## Why this vs jp2a / caca / ImageMagick?
 
 - **Node-native** ESM API + TypeScript types (`ConvertOptions` / `ConvertResult`)
