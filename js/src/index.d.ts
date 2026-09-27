@@ -3,7 +3,7 @@
  */
 
 export type LookPreset = "ascii" | "dense";
-export type OutputFormat = "text" | "html" | "ansi" | "png" | "pic" | "all";
+export type OutputFormat = "text" | "html" | "ansi" | "png" | "pic" | "gif" | "all";
 export type DimensionMode = "2d" | "depth";
 
 export interface LookPresetSpec {
@@ -50,7 +50,7 @@ export interface AsciiOptions {
   localContrast?: number;
   quality?: "fast" | "high";
   background?: "auto" | "white" | "none";
-  /** Choose outputs: text, html, ansi, png (pic). Library default = text+html+ansi (no png). */
+  /** Choose outputs: text, html, ansi, png (pic), gif. Library default = text+html+ansi (no png/gif). */
   formats?: OutputFormat[];
   text?: boolean;
   html?: boolean;
@@ -60,7 +60,9 @@ export interface AsciiOptions {
   pic?: boolean;
   /** Deprecated alias of png */
   image?: boolean;
-  /** PNG upsample factor 1–8 (default 2). */
+  /** GIF image of the ASCII glyphs (single-frame). */
+  gif?: boolean;
+  /** PNG/GIF upsample factor 1–8 (default 2). */
   imageScale?: number;
   /**
    * `2d` (default) = current flat conversion.
@@ -71,13 +73,16 @@ export interface AsciiOptions {
   depthStrength?: number;
   /** Optional grayscale depth map path (white = near). Same framing as the photo. */
   depthMap?: string;
-  /** Orbit / wiggle frame count when using convertPathOrbit (2–48). */
+  /** Animated depth GIF mode when dimension is depth (default spin360). */
+  orbitMode?: "spin360" | "wiggle";
+  /** Animated GIF / orbit frame count (4–72). */
   orbitFrames?: number;
-  /** Max parallax shift in columns for orbit. */
+  /** Wiggle parallax strength in columns. */
   orbitAmplitude?: number;
-  /** Viewer playback fps. */
+  /** Animated GIF playback fps. */
   orbitFps?: number;
   orbitTitle?: string;
+  orbitDepthScale?: number;
 }
 
 export interface AsciiCell {
@@ -96,6 +101,8 @@ export interface ColoredAscii {
   ansi?: string;
   /** PNG buffer when formats includes png/pic */
   png?: Buffer;
+  /** GIF buffer when formats includes gif (animated when dimension is depth) */
+  gif?: Buffer;
   /** Present when dimension is depth */
   depthGrid?: number[][];
 }
@@ -120,6 +127,7 @@ export declare function normalizeOptions(options?: AsciiOptions): Required<
     | "ansi"
     | "png"
     | "pic"
+    | "gif"
     | "depthMap"
   >
 > &
@@ -156,15 +164,17 @@ export declare function convertBufferColored(
   options?: AsciiOptions,
 ): Promise<ConvertResult>;
 
-/** Depth + parallax orbit (open `html` in a browser to see 3D). */
+/** Depth + 360° orbit (animated `gif`, PNG frames, HTML viewer). */
 export declare function convertPathOrbit(
   path: string,
   options?: AsciiOptions,
 ): Promise<
   ConvertResult & {
     pngs: Buffer[];
+    gif: Buffer;
     depthGrid: number[][];
-    frames: { cells: AsciiCell[][]; text: string; angle: number; offset: number }[];
+    mode: "spin360" | "wiggle";
+    frames: { cells: AsciiCell[][]; text: string; angle: number; offset: number; mode: string }[];
   }
 >;
 
@@ -173,27 +183,51 @@ export declare function parallaxShiftCells(
   depthGrid: number[][],
   offsetCols: number,
 ): AsciiCell[][];
+export declare function rotateYawCells(
+  cells: AsciiCell[][],
+  depthGrid: number[][],
+  yaw: number,
+  opts?: { depthScale?: number; focal?: number; camDist?: number },
+): AsciiCell[][];
 export declare function buildOrbitFrames(
   cells: AsciiCell[][],
   depthGrid: number[][],
-  opts?: { frames?: number; amplitude?: number },
-): { cells: AsciiCell[][]; text: string; angle: number; offset: number }[];
+  opts?: { frames?: number; amplitude?: number; mode?: "spin360" | "wiggle"; depthScale?: number },
+): { cells: AsciiCell[][]; text: string; angle: number; offset: number; mode: string }[];
 export declare function renderOrbitPngs(
   cells: AsciiCell[][],
   depthGrid: number[][],
   opts?: {
     frames?: number;
     amplitude?: number;
+    mode?: "spin360" | "wiggle";
     variant?: "glyph" | "dense";
     scale?: number;
+    depthScale?: number;
   },
 ): Promise<{
-  frames: { cells: AsciiCell[][]; text: string; angle: number; offset: number }[];
+  frames: { cells: AsciiCell[][]; text: string; angle: number; offset: number; mode: string }[];
   pngs: Buffer[];
 }>;
+export declare function renderOrbitGif(
+  cells: AsciiCell[][],
+  depthGrid: number[][],
+  opts?: {
+    frames?: number;
+    amplitude?: number;
+    mode?: "spin360" | "wiggle";
+    variant?: "glyph" | "dense";
+    scale?: number;
+    depthScale?: number;
+    fps?: number;
+  },
+): Promise<{
+  frames: { cells: AsciiCell[][]; text: string; angle: number; offset: number; mode: string }[];
+  gif: Buffer;
+}>;
 export declare function orbitViewerHtml(
-  pngs: Buffer[],
-  opts?: { title?: string; fps?: number },
+  pngs?: Buffer[],
+  opts?: { title?: string; fps?: number; frameUrls?: string[]; mode?: string },
 ): string;
 
 export declare function toHtml(
@@ -204,6 +238,16 @@ export declare function toAnsi(rows: AsciiCell[][]): string;
 export declare function toPlain(rows: AsciiCell[][]): string;
 
 export declare function toPng(
+  rows: AsciiCell[][],
+  options?: {
+    variant?: "glyph" | "dense";
+    scale?: number;
+    background?: { r: number; g: number; b: number };
+    pad?: number;
+  },
+): Promise<Buffer>;
+
+export declare function toGif(
   rows: AsciiCell[][],
   options?: {
     variant?: "glyph" | "dense";

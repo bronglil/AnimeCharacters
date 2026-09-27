@@ -13,14 +13,17 @@ export {
   convertPathOrbit,
   normalizeOptions,
   toPng,
+  toGif,
   resolveFormats,
   defaultFormats,
   estimateDepthFromLuma,
   sampleDepthMap,
   applyDepthToLuma,
   parallaxShiftCells,
+  rotateYawCells,
   buildOrbitFrames,
   renderOrbitPngs,
+  renderOrbitGif,
   orbitViewerHtml,
 } from "./converter.js";
 export { toHtml, toAnsi, toPlain } from "./color_emit.js";

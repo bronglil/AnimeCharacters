@@ -1,7 +1,7 @@
 /**
- * Resolve which artifacts to emit: text | html | ansi | png.
+ * Resolve which artifacts to emit: text | html | ansi | png | gif.
  * @param {import("./converter.js").AsciiOptions | Record<string, unknown>} [options]
- * @returns {Set<"text"|"html"|"ansi"|"png">}
+ * @returns {Set<"text"|"html"|"ansi"|"png"|"gif">}
  */
 export function resolveFormats(options = {}) {
   const set = new Set();
@@ -10,6 +10,7 @@ export function resolveFormats(options = {}) {
     for (const raw of options.formats) {
       const f = String(raw).toLowerCase().trim();
       if (f === "pic" || f === "image" || f === "png") set.add("png");
+      else if (f === "gif") set.add("gif");
       else if (f === "txt" || f === "text" || f === "plain") set.add("text");
       else if (f === "htm" || f === "html") set.add("html");
       else if (f === "ansi" || f === "color" || f === "terminal") set.add("ansi");
@@ -18,9 +19,10 @@ export function resolveFormats(options = {}) {
         set.add("html");
         set.add("ansi");
         set.add("png");
+        set.add("gif");
       } else {
         throw new Error(
-          `Unknown format "${raw}". Use text | html | ansi | png (pic) | all.`,
+          `Unknown format "${raw}". Use text | html | ansi | png (pic) | gif | all.`,
         );
       }
     }
@@ -31,6 +33,7 @@ export function resolveFormats(options = {}) {
   if (options.html === true) set.add("html");
   if (options.ansi === true) set.add("ansi");
   if (options.png === true || options.pic === true || options.image === true) set.add("png");
+  if (options.gif === true) set.add("gif");
 
   // Explicit false removes (after adds from formats array)
   if (options.text === false) set.delete("text");
@@ -39,6 +42,7 @@ export function resolveFormats(options = {}) {
   if (options.png === false || options.pic === false || options.image === false) {
     set.delete("png");
   }
+  if (options.gif === false) set.delete("gif");
 
   return set;
 }
@@ -51,6 +55,9 @@ export function defaultFormats(hint = {}) {
   const out = hint.outputPath ? String(hint.outputPath).toLowerCase() : "";
   if (out.endsWith(".png") || out.endsWith(".jpg") || out.endsWith(".jpeg") || out.endsWith(".webp")) {
     return new Set(["png"]);
+  }
+  if (out.endsWith(".gif")) {
+    return new Set(["gif"]);
   }
   if (out.endsWith(".html") || out.endsWith(".htm")) {
     return new Set(["html"]);
@@ -72,7 +79,9 @@ export function formatsWereSpecified(options = {}) {
   if (Array.isArray(options.formats) && options.formats.length) return true;
   if (options.text === true || options.html === true || options.ansi === true) return true;
   if (options.png === true || options.pic === true || options.image === true) return true;
+  if (options.gif === true) return true;
   if (options.text === false || options.html === false || options.ansi === false) return true;
   if (options.png === false || options.pic === false || options.image === false) return true;
+  if (options.gif === false) return true;
   return false;
 }

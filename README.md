@@ -8,14 +8,16 @@ Anime sprites and portraits are the *hook* — the API is general. Same call tur
   <img src="samples/sajid/sajid.png" alt="Input portrait" width="220" />
   &nbsp;&nbsp;
   <img src="samples/sajid/sajid-ascii.png" alt="Output: colored ASCII" width="220" />
+  &nbsp;&nbsp;
+  <img src="samples/sajid/sajid-3d.gif" alt="Output: animated 360° depth ASCII (GIF)" width="220" />
 </p>
 
-<p align="center"><sub>Photo → colored ASCII (<code>look: ascii</code>, <code>style: anime</code>) — <a href="samples/sajid/">samples/sajid/</a></sub></p>
+<p align="center"><sub>Photo → colored ASCII → animated 360° depth GIF (<code>--3d --format gif</code>) — <a href="samples/sajid/">samples/sajid/</a></sub></p>
 
 ```bash
 npm install @lilbrong/anime-ascii
-npx anime-ascii photo.png --format text,html,png -o out
-# → out.txt  out.html  out.png
+npx anime-ascii photo.png --format text,html,png,gif -o out
+# → out.txt  out.html  out.png  out.gif
 ```
 
 ```js
@@ -23,20 +25,21 @@ import { convertPathColored } from "@lilbrong/anime-ascii";
 import { writeFileSync } from "fs";
 import "@lilbrong/anime-ascii/ascii.css";
 
-const { text, html, png } = await convertPathColored("photo.png", {
+const { text, html, png, gif } = await convertPathColored("photo.png", {
   look: "ascii",
   style: "anime",
-  formats: ["text", "html", "png"], // pick any: text | html | ansi | png
+  formats: ["text", "html", "png", "gif"], // text | html | ansi | png | gif
 });
 
 writeFileSync("out.txt", text);
 writeFileSync("out.html", html);
 writeFileSync("out.png", png);
+writeFileSync("out.gif", gif);
 ```
 
 **Who it's for first:** Node / terminal developers (Discord bots, pipeline logs, TUI thumbnails). Anime gallery is optional flair in this repo.
 
-**Outputs:** choose `text`, `html`, `ansi`, and/or `png` (pic).
+**Outputs:** choose `text`, `html`, `ansi`, `png` (pic), and/or `gif`.
 
 ## Why anime-ascii?
 
@@ -64,6 +67,7 @@ Use **jp2a** when you need raw C speed and plain mono. Use **this** when you wan
 | Diagram | [`samples/general/diagram`](samples/general/diagram.txt) |
 | Meme-style face | [`samples/general/meme`](samples/general/meme.txt) |
 | Portrait (photo + ASCII) | [`samples/sajid/sajid.png`](samples/sajid/sajid.png) → [`sajid-ascii.png`](samples/sajid/sajid-ascii.png) |
+| Portrait depth 3D (GIF) | [`samples/sajid/sajid-3d.gif`](samples/sajid/sajid-3d.gif) (`--3d` · animated 360°) |
 | Character cards | [`gallery/`](gallery/) |
 
 ## Performance (measured, Node 24 · this machine)

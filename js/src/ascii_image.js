@@ -1,5 +1,5 @@
 /**
- * Render colored ASCII cells to a PNG buffer (image of the text).
+ * Render colored ASCII cells to PNG / GIF buffers (image of the text).
  */
 import { Jimp, loadFont } from "jimp";
 import { SANS_8_WHITE, SANS_16_WHITE } from "jimp/fonts";
@@ -56,7 +56,7 @@ async function glyphMask(char, font, cellW, cellH) {
 }
 
 /**
- * @typedef {Object} PngRenderOptions
+ * @typedef {Object} ImageRenderOptions
  * @property {"glyph"|"dense"} [variant="glyph"]
  * @property {number} [scale=2] integer upsample for sharper shares
  * @property {{ r: number, g: number, b: number }} [background]
@@ -64,14 +64,14 @@ async function glyphMask(char, font, cellW, cellH) {
  */
 
 /**
- * Paint ASCII cells into a PNG.
+ * Paint ASCII cells into a Jimp bitmap.
  * @param {AsciiCell[][]} rows
- * @param {PngRenderOptions} [options]
- * @returns {Promise<Buffer>}
+ * @param {ImageRenderOptions} [options]
+ * @returns {Promise<import("jimp").Jimp>}
  */
-export async function toPng(rows, options = {}) {
+export async function renderAsciiBitmap(rows, options = {}) {
   if (!rows?.length || !rows[0]?.length) {
-    throw new Error("anime-ascii: toPng needs a non-empty cell grid");
+    throw new Error("anime-ascii: image render needs a non-empty cell grid");
   }
 
   const variant = options.variant === "dense" ? "dense" : "glyph";
@@ -130,10 +130,29 @@ export async function toPng(rows, options = {}) {
     }
   }
 
-  const out =
-    scale > 1
-      ? img.resize({ w: width * scale, h: height * scale })
-      : img;
+  return scale > 1
+    ? img.resize({ w: width * scale, h: height * scale })
+    : img;
+}
 
-  return out.getBuffer("image/png");
+/**
+ * Paint ASCII cells into a PNG.
+ * @param {AsciiCell[][]} rows
+ * @param {ImageRenderOptions} [options]
+ * @returns {Promise<Buffer>}
+ */
+export async function toPng(rows, options = {}) {
+  const img = await renderAsciiBitmap(rows, options);
+  return img.getBuffer("image/png");
+}
+
+/**
+ * Paint ASCII cells into a GIF (single-frame, README / chat friendly).
+ * @param {AsciiCell[][]} rows
+ * @param {ImageRenderOptions} [options]
+ * @returns {Promise<Buffer>}
+ */
+export async function toGif(rows, options = {}) {
+  const img = await renderAsciiBitmap(rows, options);
+  return img.getBuffer("image/gif");
 }

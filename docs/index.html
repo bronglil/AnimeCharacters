@@ -48,7 +48,7 @@
       <h2>Install</h2>
       <p class="section-lede">Scoped package on npmjs. Node.js 18+.</p>
       <pre class="code"><code>npm install @lilbrong/anime-ascii
-npx anime-ascii photo.png --format text,html,png -o out</code></pre>
+npx anime-ascii photo.png --format text,html,png,gif -o out</code></pre>
       <p class="note">Also on <a href="https://github.com/bronglil/AnimeCharacters/packages">GitHub Packages</a> as <code>@bronglil/anime-ascii</code>.</p>
     </section>
 
@@ -73,10 +73,10 @@ npx anime-ascii photo.png --format text,html,png -o out</code></pre>
       <pre class="code"><code>import { convertPathColored } from "@lilbrong/anime-ascii";
 import "@lilbrong/anime-ascii/ascii.css";
 
-const { text, html, ansi, png } = await convertPathColored("photo.png", {
+const { text, html, ansi, png, gif } = await convertPathColored("photo.png", {
   look: "ascii",
   style: "anime",
-  formats: ["text", "html", "ansi", "png"],
+  formats: ["text", "html", "ansi", "png", "gif"],
 });</code></pre>
     </section>
 
@@ -98,6 +98,7 @@ const { text, html, ansi, png } = await convertPathColored("photo.png", {
             <li><strong>html</strong> — truecolor spans + CSS</li>
             <li><strong>ansi</strong> — terminal truecolor</li>
             <li><strong>png</strong> — rendered ASCII picture</li>
+            <li><strong>gif</strong> — ASCII picture as GIF (animated 360° when used with depth / <code>--3d</code>)</li>
           </ul>
         </div>
       </div>

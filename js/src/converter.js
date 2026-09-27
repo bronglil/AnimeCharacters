@@ -7,7 +7,7 @@ import {
 } from "./luminance.js";
 import { DEFAULT_RAMP, getRamp } from "./ramps.js";
 import { toAnsi, toHtml, toPlain } from "./color_emit.js";
-import { toPng } from "./ascii_image.js";
+import { toGif, toPng } from "./ascii_image.js";
 import { defaultFormats, formatsWereSpecified, resolveFormats } from "./formats.js";
 import {
   applyDepthToLuma,
@@ -42,19 +42,28 @@ import {
  *   Deprecated alias for png — prefer `formats: ["png"]` or `png: true`
  * @property {boolean} [png]
  * @property {boolean} [pic] alias of png
+ * @property {boolean} [gif]
  * @property {boolean} [text]
  * @property {boolean} [html]
  * @property {boolean} [ansi]
- * @property {Array<"text"|"html"|"ansi"|"png"|"pic"|"all">} [formats]
- *   Choose outputs: text, html, ansi, png (pic). Default depends on CLI -o / --color.
+ * @property {Array<"text"|"html"|"ansi"|"png"|"pic"|"gif"|"all">} [formats]
+ *   Choose outputs: text, html, ansi, png (pic), gif. Default depends on CLI -o / --color.
  * @property {number} [imageScale=2]
- *   Upsample factor for the PNG (1–8)
+ *   Upsample factor for PNG/GIF (1–8)
  * @property {"2d"|"depth"} [dimension="2d"]
  *   depth = pseudo-3D from the image (glyph density only; no face morph)
  * @property {number} [depthStrength=0.55]
  *   How hard depth pulls ink (0–1); used when dimension is depth
  * @property {string} [depthMap]
  *   Optional grayscale depth image path (white=near); loaded by convertPath*
+ * @property {"spin360"|"wiggle"} [orbitMode="spin360"]
+ *   When dimension is depth and format includes gif: animated orbit mode
+ * @property {number} [orbitFrames]
+ *   Animated GIF / orbit frame count (4–72)
+ * @property {number} [orbitAmplitude]
+ *   Wiggle parallax strength in columns
+ * @property {number} [orbitFps]
+ *   Animated GIF playback fps
  * @property {import("jimp").Jimp} [_depthImage]
  *   Internal: preloaded depth map for convertImageCore
  */
@@ -920,7 +929,7 @@ async function applyOutputFormats(result, options = {}, hint = {}) {
 
   if (formats.size === 0) {
     throw new Error(
-      'anime-ascii: no output formats selected. Use formats: ["text"|"html"|"ansi"|"png"].',
+      'anime-ascii: no output formats selected. Use formats: ["text"|"html"|"ansi"|"png"|"gif"].',
     );
   }
 
@@ -932,13 +941,36 @@ async function applyOutputFormats(result, options = {}, hint = {}) {
   if (formats.has("html")) out.html = result.html;
   if (formats.has("ansi")) out.ansi = result.ansi;
 
-  if (formats.has("png")) {
+  const needImage = formats.has("png") || formats.has("gif");
+  if (needImage) {
     const look = options.look === "dense" ? "dense" : "ascii";
     const scale = options.imageScale ?? 2;
-    out.png = await toPng(result.cells, {
+    const imageOpts = {
       variant: look === "dense" ? "dense" : "glyph",
       scale,
-    });
+    };
+    if (formats.has("png")) {
+      out.png = await toPng(result.cells, imageOpts);
+    }
+    if (formats.has("gif")) {
+      // Depth + gif → animated 360° (or wiggle) so the GIF actually moves
+      if (result.depthGrid) {
+        const { renderOrbitGif } = await import("./orbit.js");
+        const mode = options.orbitMode === "wiggle" ? "wiggle" : "spin360";
+        const { gif } = await renderOrbitGif(result.cells, result.depthGrid, {
+          mode,
+          frames: options.orbitFrames ?? (mode === "spin360" ? 24 : 16),
+          amplitude: options.orbitAmplitude ?? 2.8,
+          depthScale: options.orbitDepthScale,
+          fps: options.orbitFps ?? (mode === "spin360" ? 14 : 12),
+          variant: imageOpts.variant,
+          scale,
+        });
+        out.gif = gif;
+      } else {
+        out.gif = await toGif(result.cells, imageOpts);
+      }
+    }
   }
 
   return out;
@@ -1010,15 +1042,29 @@ export async function convertBufferColored(buffer, options = {}) {
   });
 }
 
+export { toGif, toPng } from "./ascii_image.js";
+export { resolveFormats, defaultFormats } from "./formats.js";
+export {
+  estimateDepthFromLuma,
+  sampleDepthMap,
+  applyDepthToLuma,
+} from "./depth.js";
+export {
+  parallaxShiftCells,
+  rotateYawCells,
+  buildOrbitFrames,
+  renderOrbitPngs,
+  renderOrbitGif,
+  orbitViewerHtml,
+} from "./orbit.js";
+
 /**
- * Visible 3D: depth-shaded ASCII + parallax orbit frames (time = 4th axis).
- * Open the returned `html` in a browser to see the wiggle.
- *
+ * Depth-shaded ASCII + animated orbit (GIF / PNG frames / HTML viewer).
  * @param {string} path
- * @param {AsciiOptions & { orbitFrames?: number, orbitAmplitude?: number, orbitFps?: number }} [options]
+ * @param {AsciiOptions} [options]
  */
 export async function convertPathOrbit(path, options = {}) {
-  const { renderOrbitPngs, orbitViewerHtml } = await import("./orbit.js");
+  const { renderOrbitPngs, renderOrbitGif, orbitViewerHtml } = await import("./orbit.js");
   const opts = await withDepthImage({
     ...options,
     dimension: "depth",
@@ -1034,15 +1080,25 @@ export async function convertPathOrbit(path, options = {}) {
     throw new Error("anime-ascii: orbit requires a depth grid (dimension depth)");
   }
   const look = opts.look === "dense" ? "dense" : "ascii";
-  const { frames, pngs } = await renderOrbitPngs(base.cells, base.depthGrid, {
-    frames: options.orbitFrames ?? 16,
+  const mode = options.orbitMode === "wiggle" ? "wiggle" : "spin360";
+  const frameCount = options.orbitFrames ?? (mode === "spin360" ? 24 : 16);
+  const orbitOpts = {
+    frames: frameCount,
     amplitude: options.orbitAmplitude ?? 2.8,
+    mode,
+    depthScale: options.orbitDepthScale,
     variant: look === "dense" ? "dense" : "glyph",
     scale: options.imageScale ?? 1,
-  });
+    fps: options.orbitFps ?? (mode === "spin360" ? 14 : 12),
+  };
+  const { frames, pngs } = await renderOrbitPngs(base.cells, base.depthGrid, orbitOpts);
+  const { gif } = await renderOrbitGif(base.cells, base.depthGrid, orbitOpts);
   const html = orbitViewerHtml(pngs, {
-    title: options.orbitTitle || "anime-ascii · 3D wiggle",
-    fps: options.orbitFps ?? 12,
+    title:
+      options.orbitTitle ||
+      (mode === "spin360" ? "anime-ascii · 360° spin" : "anime-ascii · 3D wiggle"),
+    fps: orbitOpts.fps,
+    mode,
     frameUrls: options.orbitFrameUrls,
   });
   return {
@@ -1052,21 +1108,9 @@ export async function convertPathOrbit(path, options = {}) {
     html,
     png: pngs[0],
     pngs,
+    gif,
     frames,
-    formats: ["html", "png"],
+    mode,
+    formats: ["html", "png", "gif"],
   };
 }
-
-export { toPng } from "./ascii_image.js";
-export { resolveFormats, defaultFormats } from "./formats.js";
-export {
-  estimateDepthFromLuma,
-  sampleDepthMap,
-  applyDepthToLuma,
-} from "./depth.js";
-export {
-  parallaxShiftCells,
-  buildOrbitFrames,
-  renderOrbitPngs,
-  orbitViewerHtml,
-} from "./orbit.js";

@@ -8,9 +8,11 @@ Node **image → colored ASCII** (readable glyphs, not a photo mosaic). Anime is
   <img src="https://raw.githubusercontent.com/bronglil/AnimeCharacters/master/samples/sajid/sajid.png" alt="Input portrait" width="220" />
   &nbsp;&nbsp;
   <img src="https://raw.githubusercontent.com/bronglil/AnimeCharacters/master/samples/sajid/sajid-ascii.png" alt="Output: colored ASCII" width="220" />
+  &nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/bronglil/AnimeCharacters/master/samples/sajid/sajid-3d.gif" alt="Output: animated 360° depth ASCII (GIF)" width="220" />
 </p>
 
-<p align="center"><sub>Photo → colored ASCII — <a href="https://github.com/bronglil/AnimeCharacters/tree/master/samples/sajid">samples/sajid/</a></sub></p>
+<p align="center"><sub>Photo → colored ASCII → animated 360° depth GIF — <a href="https://github.com/bronglil/AnimeCharacters/tree/master/samples/sajid">samples/sajid/</a></sub></p>
 
 ```bash
 npm install @lilbrong/anime-ascii
@@ -49,7 +51,7 @@ npm install @bronglil/anime-ascii
 
 ## Output formats
 
-Choose what to generate — **text**, **html**, **ansi**, and/or **png** (pic):
+Choose what to generate — **text**, **html**, **ansi**, **png** (pic), and/or **gif**:
 
 ```js
 import { convertPathColored } from "@lilbrong/anime-ascii";
@@ -59,13 +61,13 @@ const card = await convertPathColored("photo.png", {
   formats: ["text", "html"],
 });
 
-// PNG image of the ASCII glyphs
+// PNG or GIF image of the ASCII glyphs
 const pic = await convertPathColored("photo.png", {
-  formats: ["png"],
+  formats: ["png", "gif"],
   style: "anime",
   imageScale: 2,
 });
-// pic.png → Buffer (write with fs.writeFileSync("out.png", pic.png))
+// pic.png / pic.gif → Buffer
 ```
 
 CLI:
@@ -74,11 +76,13 @@ CLI:
 npx anime-ascii photo.png --format text
 npx anime-ascii photo.png --format html -o card.html
 npx anime-ascii photo.png --format png --style anime -o card.png
-npx anime-ascii photo.png --format text,html,png -o out
-# → out.txt  out.html  out.png
+npx anime-ascii photo.png --format gif --style anime --3d -o out-3d.gif
+# → animated 360° depth GIF
+npx anime-ascii photo.png --format text,html,png,gif -o out
+# → out.txt  out.html  out.png  out.gif
 
 # same with flags
-npx anime-ascii photo.png --text --html --pic -o out
+npx anime-ascii photo.png --text --html --pic --gif -o out
 ```
 
 ## Why this vs jp2a / caca / ImageMagick?
