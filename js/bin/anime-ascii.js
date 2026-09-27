@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import { writeFileSync } from "node:fs";
-import { resolve, join, dirname, basename, extname } from "node:path";
 import {
   convertPath,
   convertPathColored,
+  convertPathOrbit,
   RAMPS,
   LOOK_PRESETS,
   PORTRAIT_COLUMNS,
 } from "../src/index.js";
-
+import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve, join, dirname, basename, extname } from "node:path";
 function printHelp() {
   console.log(`Usage: anime-ascii <image> [options]
 
@@ -37,6 +37,12 @@ Other:
       --style <mode>      auto | fill | relief | portrait | anime
       --quality <mode>    fast | high
       --image-scale <n>   PNG scale (default 2)
+      --3d                Pseudo-3D from the image (depth → denser near glyphs)
+      --dimension <mode>  2d (default) | depth
+      --depth-map <path>  Grayscale depth image (white=near); same framing
+      --depth-strength <n> Depth mix 0–1 (default 0.55)
+      --orbit [n]         Visible 3D wiggle (n frames, default 16) → HTML viewer
+      --orbit-amp <n>     Parallax strength in columns (default 2.8)
       --dither
       --list-ramps
   -h, --help
@@ -47,6 +53,9 @@ Examples:
   anime-ascii photo.png --format png --style anime -o card.png
   anime-ascii photo.png --format text,html,png -o out
   anime-ascii photo.png --text --html --pic -o out
+  anime-ascii photo.png --style anime --3d --format png -o out-3d
+  anime-ascii photo.png --style anime --orbit -o out-3d
+  # open out-3d.html in a browser to see depth move
 `);
 }
 
@@ -71,6 +80,11 @@ function parseArgs(argv) {
     formats: [],
     flags: { text: false, html: false, ansi: false, png: false },
     imageScale: 2,
+    dimension: "2d",
+    depthMap: null,
+    depthStrength: null,
+    orbit: null,
+    orbitAmp: null,
     listRamps: false,
     help: false,
   };
@@ -158,6 +172,31 @@ function parseArgs(argv) {
       case "--image-scale":
         args.imageScale = Number(next());
         break;
+      case "--3d":
+        args.dimension = "depth";
+        break;
+      case "--dimension":
+        args.dimension = next();
+        break;
+      case "--depth-map":
+        args.depthMap = next();
+        break;
+      case "--depth-strength":
+        args.depthStrength = Number(next());
+        break;
+      case "--orbit": {
+        const peek = argv[i + 1];
+        if (peek && !peek.startsWith("-") && /^\d+$/.test(peek)) {
+          args.orbit = Number(next());
+        } else {
+          args.orbit = 16;
+        }
+        args.dimension = "depth";
+        break;
+      }
+      case "--orbit-amp":
+        args.orbitAmp = Number(next());
+        break;
       case "--dither":
         args.dither = true;
         break;
@@ -205,6 +244,7 @@ function buildOpts(args, formats) {
     metric: args.metric,
     quality: args.quality,
     imageScale: args.imageScale,
+    dimension: args.dimension === "depth" ? "depth" : "2d",
     formats,
   };
   if (args.columns != null) opts.columns = args.columns;
@@ -214,6 +254,13 @@ function buildOpts(args, formats) {
   if (args.contrast != null) opts.contrast = args.contrast;
   if (args.gamma != null) opts.gamma = args.gamma;
   if (args.edgeBoost != null) opts.edgeBoost = args.edgeBoost;
+  if (args.depthMap != null) opts.depthMap = args.depthMap;
+  if (args.depthStrength != null) opts.depthStrength = args.depthStrength;
+  if (args.orbit != null) {
+    opts.orbitFrames = args.orbit;
+    opts.dimension = "depth";
+  }
+  if (args.orbitAmp != null) opts.orbitAmplitude = args.orbitAmp;
   return opts;
 }
 
@@ -263,6 +310,46 @@ async function main() {
 
   const formats = resolveCliFormats(args);
   const opts = buildOpts(args, formats);
+
+  // Visible 3D: write HTML wiggle viewer (+ first PNG / optional frame dir)
+  if (args.orbit != null) {
+    if (!args.output) {
+      throw new Error("Orbit/3D wiggle needs -o basename (writes basename.html + .png)");
+    }
+    const rich = await convertPathOrbit(resolve(args.imagePath), {
+      ...opts,
+      orbitFrames: args.orbit,
+      imageScale: args.imageScale ?? 1,
+    });
+    const out = args.output;
+    const ext = extname(out).toLowerCase();
+    const stem =
+      ext === ".html" || ext === ".htm" || ext === ".png"
+        ? join(dirname(out), basename(out, ext))
+        : out;
+    const htmlPath = `${stem}.html`;
+    const pngPath = `${stem}.png`;
+    const frameDir = `${stem}-frames`;
+    mkdirSync(frameDir, { recursive: true });
+    const frameUrls = [];
+    rich.pngs.forEach((buf, i) => {
+      const name = `${String(i).padStart(2, "0")}.png`;
+      writeFileSync(join(frameDir, name), buf);
+      frameUrls.push(`${basename(frameDir)}/${name}`);
+    });
+    // Rebuild viewer with relative frame URLs (small HTML)
+    const { orbitViewerHtml } = await import("../src/orbit.js");
+    const html = orbitViewerHtml([], {
+      title: "anime-ascii · 3D wiggle",
+      fps: 12,
+      frameUrls,
+    });
+    writeFileSync(htmlPath, html, "utf8");
+    writeFileSync(pngPath, rich.png);
+    console.error(`Wrote: ${htmlPath} (open in browser to see 3D), ${pngPath}, ${frameDir}/`);
+    return 0;
+  }
+
   const needsRich =
     formats.includes("html") ||
     formats.includes("ansi") ||

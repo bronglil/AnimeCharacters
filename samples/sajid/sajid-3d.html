@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>anime-ascii · 3D wiggle</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: #0a0c0b; color: #d7e0d9;
+      font-family: ui-monospace, Menlo, monospace;
+    }
+    .wrap { text-align: center; padding: 1.5rem; max-width: 96vw; }
+    h1 { font-size: 1rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
+    p { margin: 0 0 1rem; opacity: 0.7; font-size: 0.8rem; }
+    img {
+      max-width: min(92vw, 520px); height: auto;
+      background: #000; border: 1px solid rgba(255,255,255,0.12);
+    }
+    .hint { margin-top: 0.85rem; font-size: 0.75rem; opacity: 0.55; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>anime-ascii · 3D wiggle</h1>
+    <p>Depth parallax over time — near glyphs move more than far ones. This is how you <em>see</em> 3D.</p>
+    <img id="frame" alt="3D ASCII wiggle" />
+    <p class="hint">Autoplaying · 12 frames · 12 fps · from a simple 2D photo</p>
+  </div>
+  <script>
+    const frames = ["sajid-3d-frames/00.png","sajid-3d-frames/01.png","sajid-3d-frames/02.png","sajid-3d-frames/03.png","sajid-3d-frames/04.png","sajid-3d-frames/05.png","sajid-3d-frames/06.png","sajid-3d-frames/07.png","sajid-3d-frames/08.png","sajid-3d-frames/09.png","sajid-3d-frames/10.png","sajid-3d-frames/11.png"];
+    const img = document.getElementById("frame");
+    let i = 0;
+    img.src = frames[0];
+    setInterval(() => {
+      i = (i + 1) % frames.length;
+      img.src = frames[i];
+    }, 83);
+  </script>
+</body>
+</html>

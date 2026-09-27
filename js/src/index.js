@@ -10,10 +10,18 @@ export {
   convertPathColored,
   convertBuffer,
   convertBufferColored,
+  convertPathOrbit,
   normalizeOptions,
   toPng,
   resolveFormats,
   defaultFormats,
+  estimateDepthFromLuma,
+  sampleDepthMap,
+  applyDepthToLuma,
+  parallaxShiftCells,
+  buildOrbitFrames,
+  renderOrbitPngs,
+  orbitViewerHtml,
 } from "./converter.js";
 export { toHtml, toAnsi, toPlain } from "./color_emit.js";
 export {

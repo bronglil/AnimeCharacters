@@ -9,6 +9,11 @@ import { DEFAULT_RAMP, getRamp } from "./ramps.js";
 import { toAnsi, toHtml, toPlain } from "./color_emit.js";
 import { toPng } from "./ascii_image.js";
 import { defaultFormats, formatsWereSpecified, resolveFormats } from "./formats.js";
+import {
+  applyDepthToLuma,
+  estimateDepthFromLuma,
+  sampleDepthMap,
+} from "./depth.js";
 
 /**
  * @typedef {Object} AsciiOptions
@@ -44,6 +49,14 @@ import { defaultFormats, formatsWereSpecified, resolveFormats } from "./formats.
  *   Choose outputs: text, html, ansi, png (pic). Default depends on CLI -o / --color.
  * @property {number} [imageScale=2]
  *   Upsample factor for the PNG (1–8)
+ * @property {"2d"|"depth"} [dimension="2d"]
+ *   depth = pseudo-3D from the image (glyph density only; no face morph)
+ * @property {number} [depthStrength=0.55]
+ *   How hard depth pulls ink (0–1); used when dimension is depth
+ * @property {string} [depthMap]
+ *   Optional grayscale depth image path (white=near); loaded by convertPath*
+ * @property {import("jimp").Jimp} [_depthImage]
+ *   Internal: preloaded depth map for convertImageCore
  */
 
 /**
@@ -83,6 +96,7 @@ export const MAX_COLUMNS = 400;
 const STYLES = new Set(["auto", "fill", "relief", "portrait", "anime"]);
 const QUALITIES = new Set(["fast", "high"]);
 const BACKGROUNDS = new Set(["auto", "white", "none"]);
+const DIMENSIONS = new Set(["2d", "depth"]);
 
 /**
  * @param {unknown} value
@@ -146,6 +160,19 @@ export function normalizeOptions(options = {}) {
     throw new Error(`Unknown background "${background}". Use auto | white | none.`);
   }
 
+  const dimension = options.dimension ?? "2d";
+  if (!DIMENSIONS.has(dimension)) {
+    throw new Error(`Unknown dimension "${dimension}". Use "2d" or "depth".`);
+  }
+
+  let depthStrength = 0.55;
+  if (options.depthStrength != null) {
+    depthStrength = requireFiniteNumber(options.depthStrength, "depthStrength");
+    if (depthStrength < 0 || depthStrength > 1) {
+      throw new Error(`depthStrength must be 0–1, got ${depthStrength}`);
+    }
+  }
+
   // LOOK_PRESETS win for contrast / edges / ramp / cellAspect.
   // Portrait/anime may raise floors and widen columns for face coverage.
   const portraitFloor = faceStyle
@@ -200,6 +227,9 @@ export function normalizeOptions(options = {}) {
     ),
     quality,
     background,
+    dimension,
+    depthStrength,
+    depthMap: typeof options.depthMap === "string" ? options.depthMap : undefined,
   };
 }
 
@@ -616,22 +646,23 @@ function applyAnimeTouch(grid) {
       let v = grid[y][x];
       const e = edges[y][x];
 
-      // Soft cel bands on skin midtones (keeps identity, cleaner anime planes)
-      if (v > 0.35 && v < 0.88) {
+      // Soft cel bands on flat skin — skip strong edges so eyes / nose / brow survive in ASCII
+      if (e < 0.28 && v > 0.35 && v < 0.88) {
         const bands = 5;
         const t = (v - 0.35) / (0.88 - 0.35);
         const q = Math.round(t * (bands - 1)) / (bands - 1);
         v = 0.35 + q * (0.88 - 0.35);
-        v = grid[y][x] * 0.45 + v * 0.55;
+        v = grid[y][x] * 0.55 + v * 0.45;
       }
 
       // Ink-line silhouette (ears / hair / jaw)
       if (outline[y][x]) {
         v = Math.min(v, 0.18);
-      } else if (e > 0.35) {
-        v = clamp01(v * (1 - 0.45 * e));
+      } else if (e > 0.28) {
+        // Stronger feature ink for eyes / nose / brow (readable in text + PNG)
+        v = clamp01(v * (1 - 0.55 * e));
       } else if (v > 0.55 && v < 0.85) {
-        v = clamp01(v + 0.04);
+        v = clamp01(v + 0.03);
       }
 
       out[y][x] = clamp01(v);
@@ -795,6 +826,20 @@ function convertImageCore(image, options = {}) {
     if (useAnime) grid = applyAnimeTouch(grid);
   }
 
+  // Pseudo-3D: depth from the same image (or optional depth map) → glyph density only
+  /** @type {number[][]|null} */
+  let depthGrid = null;
+  if (opts.dimension === "depth") {
+    const h0 = grid.length;
+    const w0 = grid[0]?.length ?? 0;
+    if (options._depthImage) {
+      depthGrid = sampleDepthMap(options._depthImage, w0, h0);
+    } else {
+      depthGrid = estimateDepthFromLuma(grid);
+    }
+    grid = applyDepthToLuma(grid, depthGrid, opts.depthStrength);
+  }
+
   const flat = grid.flat();
   const adjustOpts = useRelief ? { ...opts, autocontrast: false, contrast: 1 } : opts;
   // Anime: gentler autocontrast so skin planes / ears stay
@@ -834,6 +879,7 @@ function convertImageCore(image, options = {}) {
     html: toHtml(cells, { variant: opts.look === "dense" ? "dense" : "glyph" }),
     ansi: toAnsi(cells),
     cells,
+    depthGrid,
   };
 }
 
@@ -880,6 +926,7 @@ async function applyOutputFormats(result, options = {}, hint = {}) {
 
   /** @type {Record<string, unknown>} */
   const out = { cells: result.cells, formats: [...formats] };
+  if (result.depthGrid) out.depthGrid = result.depthGrid;
 
   if (formats.has("text")) out.text = result.text;
   if (formats.has("html")) out.html = result.html;
@@ -897,6 +944,22 @@ async function applyOutputFormats(result, options = {}, hint = {}) {
   return out;
 }
 
+/**
+ * @param {AsciiOptions} [options]
+ * @returns {Promise<AsciiOptions>}
+ */
+async function withDepthImage(options = {}) {
+  if (options.dimension !== "depth" || !options.depthMap || options._depthImage) {
+    return options;
+  }
+  try {
+    const depthImage = await Jimp.read(options.depthMap);
+    return { ...options, _depthImage: depthImage };
+  } catch (err) {
+    wrapImageError(options.depthMap, err);
+  }
+}
+
 export async function convertPath(path, options = {}) {
   let image;
   try {
@@ -904,7 +967,8 @@ export async function convertPath(path, options = {}) {
   } catch (err) {
     wrapImageError(path, err);
   }
-  return convertImage(image, options);
+  const opts = await withDepthImage(options);
+  return convertImage(image, opts);
 }
 
 export async function convertPathColored(path, options = {}) {
@@ -914,9 +978,10 @@ export async function convertPathColored(path, options = {}) {
   } catch (err) {
     wrapImageError(path, err);
   }
-  const base = convertImageColored(image, options);
-  return applyOutputFormats(base, options, {
-    color: options.ansi === true || options.formats?.includes?.("ansi"),
+  const opts = await withDepthImage(options);
+  const base = convertImageColored(image, opts);
+  return applyOutputFormats(base, opts, {
+    color: opts.ansi === true || opts.formats?.includes?.("ansi"),
   });
 }
 
@@ -927,7 +992,8 @@ export async function convertBuffer(buffer, options = {}) {
   } catch (err) {
     wrapImageError(buffer, err);
   }
-  return convertImage(image, options);
+  const opts = await withDepthImage(options);
+  return convertImage(image, opts);
 }
 
 export async function convertBufferColored(buffer, options = {}) {
@@ -937,11 +1003,70 @@ export async function convertBufferColored(buffer, options = {}) {
   } catch (err) {
     wrapImageError(buffer, err);
   }
-  const base = convertImageColored(image, options);
-  return applyOutputFormats(base, options, {
-    color: options.ansi === true || options.formats?.includes?.("ansi"),
+  const opts = await withDepthImage(options);
+  const base = convertImageColored(image, opts);
+  return applyOutputFormats(base, opts, {
+    color: opts.ansi === true || opts.formats?.includes?.("ansi"),
   });
+}
+
+/**
+ * Visible 3D: depth-shaded ASCII + parallax orbit frames (time = 4th axis).
+ * Open the returned `html` in a browser to see the wiggle.
+ *
+ * @param {string} path
+ * @param {AsciiOptions & { orbitFrames?: number, orbitAmplitude?: number, orbitFps?: number }} [options]
+ */
+export async function convertPathOrbit(path, options = {}) {
+  const { renderOrbitPngs, orbitViewerHtml } = await import("./orbit.js");
+  const opts = await withDepthImage({
+    ...options,
+    dimension: "depth",
+  });
+  let image;
+  try {
+    image = await Jimp.read(path);
+  } catch (err) {
+    wrapImageError(path, err);
+  }
+  const base = convertImageColored(image, opts);
+  if (!base.depthGrid) {
+    throw new Error("anime-ascii: orbit requires a depth grid (dimension depth)");
+  }
+  const look = opts.look === "dense" ? "dense" : "ascii";
+  const { frames, pngs } = await renderOrbitPngs(base.cells, base.depthGrid, {
+    frames: options.orbitFrames ?? 16,
+    amplitude: options.orbitAmplitude ?? 2.8,
+    variant: look === "dense" ? "dense" : "glyph",
+    scale: options.imageScale ?? 1,
+  });
+  const html = orbitViewerHtml(pngs, {
+    title: options.orbitTitle || "anime-ascii · 3D wiggle",
+    fps: options.orbitFps ?? 12,
+    frameUrls: options.orbitFrameUrls,
+  });
+  return {
+    cells: base.cells,
+    depthGrid: base.depthGrid,
+    text: base.text,
+    html,
+    png: pngs[0],
+    pngs,
+    frames,
+    formats: ["html", "png"],
+  };
 }
 
 export { toPng } from "./ascii_image.js";
 export { resolveFormats, defaultFormats } from "./formats.js";
+export {
+  estimateDepthFromLuma,
+  sampleDepthMap,
+  applyDepthToLuma,
+} from "./depth.js";
+export {
+  parallaxShiftCells,
+  buildOrbitFrames,
+  renderOrbitPngs,
+  orbitViewerHtml,
+} from "./orbit.js";

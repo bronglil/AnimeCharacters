@@ -4,6 +4,7 @@
 
 export type LookPreset = "ascii" | "dense";
 export type OutputFormat = "text" | "html" | "ansi" | "png" | "pic" | "all";
+export type DimensionMode = "2d" | "depth";
 
 export interface LookPresetSpec {
   readonly columns: number;
@@ -61,6 +62,22 @@ export interface AsciiOptions {
   image?: boolean;
   /** PNG upsample factor 1–8 (default 2). */
   imageScale?: number;
+  /**
+   * `2d` (default) = current flat conversion.
+   * `depth` = pseudo-3D from the image — glyph density only, no face morph.
+   */
+  dimension?: DimensionMode;
+  /** How strongly depth pulls ink (0–1). Default 0.55 when dimension is depth. */
+  depthStrength?: number;
+  /** Optional grayscale depth map path (white = near). Same framing as the photo. */
+  depthMap?: string;
+  /** Orbit / wiggle frame count when using convertPathOrbit (2–48). */
+  orbitFrames?: number;
+  /** Max parallax shift in columns for orbit. */
+  orbitAmplitude?: number;
+  /** Viewer playback fps. */
+  orbitFps?: number;
+  orbitTitle?: string;
 }
 
 export interface AsciiCell {
@@ -79,6 +96,8 @@ export interface ColoredAscii {
   ansi?: string;
   /** PNG buffer when formats includes png/pic */
   png?: Buffer;
+  /** Present when dimension is depth */
+  depthGrid?: number[][];
 }
 
 /** Alias for consumers who prefer this name. */
@@ -101,9 +120,22 @@ export declare function normalizeOptions(options?: AsciiOptions): Required<
     | "ansi"
     | "png"
     | "pic"
+    | "depthMap"
   >
 > &
   AsciiOptions;
+
+export declare function estimateDepthFromLuma(lumaGrid: number[][]): number[][];
+export declare function sampleDepthMap(
+  image: { bitmap: { width: number; height: number; data: ArrayLike<number> } },
+  cols: number,
+  rows: number,
+): number[][];
+export declare function applyDepthToLuma(
+  lumaGrid: number[][],
+  depthGrid: number[][],
+  strength: number,
+): number[][];
 
 export declare function resolveFormats(options?: AsciiOptions): Set<string>;
 export declare function defaultFormats(hint?: {
@@ -117,12 +149,52 @@ export declare function convertPath(path: string, options?: AsciiOptions): Promi
 export declare function convertPathColored(
   path: string,
   options?: AsciiOptions,
-): Promise<ColoredAscii>;
+): Promise<ConvertResult>;
 export declare function convertBuffer(buffer: Buffer | ArrayBuffer, options?: AsciiOptions): Promise<string>;
 export declare function convertBufferColored(
   buffer: Buffer | ArrayBuffer,
   options?: AsciiOptions,
-): Promise<ColoredAscii>;
+): Promise<ConvertResult>;
+
+/** Depth + parallax orbit (open `html` in a browser to see 3D). */
+export declare function convertPathOrbit(
+  path: string,
+  options?: AsciiOptions,
+): Promise<
+  ConvertResult & {
+    pngs: Buffer[];
+    depthGrid: number[][];
+    frames: { cells: AsciiCell[][]; text: string; angle: number; offset: number }[];
+  }
+>;
+
+export declare function parallaxShiftCells(
+  cells: AsciiCell[][],
+  depthGrid: number[][],
+  offsetCols: number,
+): AsciiCell[][];
+export declare function buildOrbitFrames(
+  cells: AsciiCell[][],
+  depthGrid: number[][],
+  opts?: { frames?: number; amplitude?: number },
+): { cells: AsciiCell[][]; text: string; angle: number; offset: number }[];
+export declare function renderOrbitPngs(
+  cells: AsciiCell[][],
+  depthGrid: number[][],
+  opts?: {
+    frames?: number;
+    amplitude?: number;
+    variant?: "glyph" | "dense";
+    scale?: number;
+  },
+): Promise<{
+  frames: { cells: AsciiCell[][]; text: string; angle: number; offset: number }[];
+  pngs: Buffer[];
+}>;
+export declare function orbitViewerHtml(
+  pngs: Buffer[],
+  opts?: { title?: string; fps?: number },
+): string;
 
 export declare function toHtml(
   rows: AsciiCell[][],
